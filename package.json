@@ -1,0 +1,27 @@
+{
+  "name": "mmm-mlb",
+  "version": "1.0.0",
+  "description": "MLB Scoreboard for MagicMirror2",
+  "main": "MMM-MLB.js",
+  "dependencies": {
+    "moment": "^2.17.1",
+    "request": "^2.81.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cowboysdude/MMM-MLB.git"
+  },
+  "keywords": [
+    "MagicMirror2"
+  ],
+  "author": "cowboysdude",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cowboysdude/MMM-MLB/issues"
+  },
+  "homepage": "https://github.com/cowboysdude/MMM-MLB#readme"
+}

@@ -1,0 +1,26 @@
+.MMM-MLB .wrapper{
+  text-align: justify;
+}
+.MMM-MLB .header {
+  color: #fff;
+  text-align: center;
+}
+.MMM-MLB .status {
+  color: #fe0127;
+  font-size: 17px;
+}
+.MMM-MLB .r {
+  color: #c6d9d0;
+}
+.MMM-MLB .h {
+  color: #c6d9d0;
+}
+.MMM-MLB .e {
+  color: #c6d9d0;
+}
+.MMM-MLB .hometeam {
+  color: #e4e4e4;
+}
+.MMM-MLB .awayteam {
+  color: #e4e4e4;
+}
