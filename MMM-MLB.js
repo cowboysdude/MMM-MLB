@@ -1,4 +1,4 @@
- /* Magic Mirror
+  /* Magic Mirror
     * Module: MMM-MLB
     *
     * By cowboysdude
@@ -50,7 +50,6 @@ Module.register("MMM-MLB", {
          
          var header = document.createElement("header");
          header.classList.add("header");
-         //header.className = "xsmall bright";
          header.innerHTML = "MLB Scores     " + moment().format('MM/DD/YYYY');
          wrapper.appendChild(header);
         
@@ -100,9 +99,12 @@ Module.register("MMM-MLB", {
          
          var awayTemp = document.createElement("tr");
          var awayTempColumn = document.createElement("td");
+         var awayImg = '<img class="logo" src="modules/MMM-MLB/icons/'+ games.away_team_name +'.png"> ' + games.away_team_name;
          awayTempColumn.setAttribute("colspan", 3);
-         awayTempColumn.classList.add("awayteam");
-         awayTempColumn.innerHTML = games.away_team_name;
+         awayTempColumn.classList.add("awayteam"); 
+		 awayTempColumn.innerHTML = awayImg;	
+		 
+         
          awayTemp.appendChild(awayTempColumn);
          gameTable.appendChild(awayTemp);
          
@@ -144,9 +146,10 @@ Module.register("MMM-MLB", {
          
          var homeTemp = document.createElement("tr");
          var homeTempColumn = document.createElement("td");
+         var homeImg = '<img class="logo" src="modules/MMM-MLB/icons/'+ games.home_team_name +'.png"> ' + games.home_team_name;
          homeTempColumn.setAttribute("colspan", 3);
          homeTempColumn.classList.add("hometeam");
-         homeTempColumn.innerHTML = games.home_team_name;
+         homeTempColumn.innerHTML = '<img class="logo" src="modules/MMM-MLB/icons/'+ games.home_team_name +'.png"> ' + games.home_team_name;
          homeTemp.appendChild(homeTempColumn);
          gameTable.appendChild(homeTemp);
          
