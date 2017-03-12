@@ -22,11 +22,11 @@ ______________CONFIG.JS______________________
  Custom.css colors you can change:
  
     
-.MMM-MLB .header 
-.MMM-MLB .status 
-.MMM-MLB .r 
-.MMM-MLB .h 
-.MMM-MLB .e 
-.MMM-MLB .hometeam 
-.MMM-MLB .awayteam 
+          .MMM-MLB .header 
+          .MMM-MLB .status 
+          .MMM-MLB .r 
+          .MMM-MLB .h 
+          .MMM-MLB .e 
+          .MMM-MLB .hometeam 
+          .MMM-MLB .awayteam 
     
