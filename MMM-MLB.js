@@ -1,4 +1,4 @@
-  /* Magic Mirror
+   /* Magic Mirror
     * Module: MMM-MLB
     *
     * By cowboysdude
@@ -15,7 +15,8 @@ Module.register("MMM-MLB", {
            retryDelay: 1500,
            maxWidth: "300px",
            fadeSpeed: 4,
-           rotateInterval: 5 * 1000
+           rotateInterval: 5 * 1000,
+           header: "Yes",
        },
        
        // Define required scripts.
@@ -48,10 +49,12 @@ Module.register("MMM-MLB", {
          wrapper.className = "wrapper";
          wrapper.style.maxWidth = this.config.maxWidth;
          
+         if (this.config.header === "Yes"){
          var header = document.createElement("header");
          header.classList.add("header");
          header.innerHTML = "MLB Scores     " + moment().format('MM/DD/YYYY');
          wrapper.appendChild(header);
+        }
         
          var gkeys = Object.keys(this.mlb);
          if (gkeys.length > 0) {
