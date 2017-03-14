@@ -1,4 +1,4 @@
-   /* Magic Mirror
+ /* Magic Mirror
     * Module: MMM-MLB
     *
     * By cowboysdude
@@ -195,34 +195,29 @@ Module.register("MMM-MLB", {
          var statusTempColumn = document.createElement("td");
          statusTempColumn.className= "xsmall bright";
          statusTempColumn.setAttribute("colspan", 1);
-         if (games.status.status === "Final" && games.winning_pitcher.first != ""){
-		 statusTempColumn.innerHTML = "WP: "+ games.winning_pitcher.first + " " +games.winning_pitcher.last;	
-		 } else if (games.status.status === "Final" && games.save_pitcher.first != ""){
-		 statusTempColumn.innerHTML = "Save: "+ games.save_pitcher.first + " " +games.save_pitcher.last;
-		 } else if  (games.status.status === undefined || null || "Preview" && games.status.status === "Final" ){
-		 statusTempColumn.innerHTML = "No Pitcher information";	
-		 } else if  (games.status.status === "Preview"){
-		 statusTempColumn.innerHTML = "Pitchers: Home - " + games.home_probable_pitcher.first_name +" "+games.home_probable_pitcher.last + " Away - "+games.away_probable_pitcher.first_name +" "+games.away_probable_pitcher.last;	
-		 }	else if (games.status.status === undefined || null || "Preview" ){
-		 statusTempColumn.innerHTML = "No Pitcher information";
-		 } else if (games.winning_pitcher.first === "" || null || undefined  && games.save_pitcher.first === "" || null || undefined ){
-		 statusTempColumn.innerHTML = "No Pitcher information";	
+         if (games.status.status === "Final" && games.winning_pitcher.first != "" || null){
+         statusTempColumn.innerHTML = "Winning Pitcher: "+ games.winning_pitcher.first + " " +games.winning_pitcher.last;
+		 } else if (games.status.status === "Final" && games.winning_pitcher.first === "" || null || undefined){
+         statusTempColumn.innerHTML = "Winning Pitcher: None listed";
+		 } else if (games.status.status = "Preview" || "Warm up") {
+		 statusTempColumn.innerHTML = "";	
 		 } else {
-		 statusTempColumn.innerHTML = "In Progress - Inning:   " + games.inning;	
+		 statusTempColumn.innerHTML = "In Progress - Inning:  " + games.inning;	
 		 }
          statusTemp.appendChild(statusTempColumn);
          gameTable.appendChild(statusTemp);
  
+         
          var venuetemp = document.createElement("tr");
          var venuetempColumn = document.createElement("td");
          venuetempColumn.className= "xsmall bright";
          venuetempColumn.setAttribute("colspan", 4);
-         if (games.status.status === "In progress"){
-         venuetempColumn.innerHTML = "In progress" + games.status.status + "Inning: "+ games.status.inning;
-		 } else if (games.status.status === "Final"){
-		 venuetempColumn.innerHTML = "Game time:  " + games.time  +" - "+   games.aw_lg_ampm  +"  "+   games.time_zone;
+         if (games.status.status === "Final" &&  games.save_pitcher.first !="" || null){
+         venuetempColumn.innerHTML = "Save:  " + games.save_pitcher.first + " " + games.save_pitcher.last;
+		 } else if (games.status.status != "Final"){
+		 venuetempColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " "+  games.time_zone;
 		 } else {
-		 venuetempColumn.innerHTML = games.venue +"  "+ "--Game time:  " + games.time  +" - "+   games.aw_lg_ampm  +"  "+   games.time_zone;	
+		 venuetempColumn.innerHTML = " ";	
 		 }
 		 venuetemp.appendChild(venuetempColumn);
          gameTable.appendChild(venuetemp);
@@ -242,7 +237,7 @@ Module.register("MMM-MLB", {
      },
      
      scheduleCarousel: function() {
-         console.log("Showing games today");
+         console.log("Showing MLB games for today");
          this.rotateInterval = setInterval(() => {
              this.activeItem++;
              this.updateDom(this.config.animationSpeed);
