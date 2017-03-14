@@ -16,7 +16,7 @@ Module.register("MMM-MLB", {
            maxWidth: "300px",
            fadeSpeed: 4,
            rotateInterval: 5 * 1000,
-           header: "Yes",
+           header: true,
        },
        
        // Define required scripts.
@@ -49,7 +49,7 @@ Module.register("MMM-MLB", {
          wrapper.className = "wrapper";
          wrapper.style.maxWidth = this.config.maxWidth;
          
-         if (this.config.header === "Yes"){
+         if (this.config.header === true){
          var header = document.createElement("header");
          header.classList.add("header");
          header.innerHTML = "MLB Scores     " + moment().format('MM/DD/YYYY');
