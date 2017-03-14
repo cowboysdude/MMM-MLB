@@ -33,5 +33,5 @@ ______________CONFIG.JS______________________
     
 ![alt tag](http://www.dallascowboyschat.com/mm/progress.JPG)
 
-![alt tag](http://www.dallascowboyschat.com/mm/progress1.JPG)
+![alt tag](http://www.dallascowboyschat.com/mm/progress2.JPG)
 
