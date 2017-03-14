@@ -14,7 +14,8 @@ ______________CONFIG.JS______________________
 			module: 'MMM-MLB',
 			position: 'top_center',
 			config: {
-				maxWidth: "400px"
+				maxWidth: "400px",
+				header: false
 			}
 		},
  ___________________________________________
