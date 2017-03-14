@@ -202,7 +202,7 @@ Module.register("MMM-MLB", {
 		 }else if (games.status.status === "Final" && games.winning_pitcher.first === "" || null || undefined){
          statusTempColumn.innerHTML = "Winning Pitcher: None listed";
 		 }else {
-		 statusTempColumn.innerHTML = "In Progress - Inning:  " + games.inning;	
+		 statusTempColumn.innerHTML = "In Progress";	
 		 }
          statusTemp.appendChild(statusTempColumn);
          gameTable.appendChild(statusTemp);
