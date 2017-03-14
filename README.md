@@ -31,5 +31,7 @@ ______________CONFIG.JS______________________
           .MMM-MLB .hometeam 
           .MMM-MLB .awayteam 
     
-![alt tag](http://www.dallascowboyschat.com/mm/11.jpg)
+![alt tag](http://www.dallascowboyschat.com/mm/progress.JPG)
+
+![alt tag](http://www.dallascowboyschat.com/mm/progress1.JPG)
 
