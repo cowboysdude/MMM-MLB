@@ -195,13 +195,13 @@ Module.register("MMM-MLB", {
          var statusTempColumn = document.createElement("td");
          statusTempColumn.className= "xsmall bright";
          statusTempColumn.setAttribute("colspan", 1);
-         if (games.status.status === "Final" && games.winning_pitcher.first != "" || null){
+         if(games.hasOwnProperty('home_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')){
+         statusTempColumn.innerHTML = "Home Pitcher: "+ games.home_probable_pitcher.first + " " +games.home_probable_pitcher.last+ "    ERA: " +games.away_probable_pitcher.era;
+         }else if (games.status.status === "Final" && games.winning_pitcher.first != "" || null){
          statusTempColumn.innerHTML = "Winning Pitcher: "+ games.winning_pitcher.first + " " +games.winning_pitcher.last;
-		 } else if (games.status.status === "Final" && games.winning_pitcher.first === "" || null || undefined){
+		 }else if (games.status.status === "Final" && games.winning_pitcher.first === "" || null || undefined){
          statusTempColumn.innerHTML = "Winning Pitcher: None listed";
-		 } else if (games.status.status = "Preview" || "Warm up") {
-		 statusTempColumn.innerHTML = "";	
-		 } else {
+		 }else {
 		 statusTempColumn.innerHTML = "In Progress - Inning:  " + games.inning;	
 		 }
          statusTemp.appendChild(statusTempColumn);
@@ -212,15 +212,27 @@ Module.register("MMM-MLB", {
          var venuetempColumn = document.createElement("td");
          venuetempColumn.className= "xsmall bright";
          venuetempColumn.setAttribute("colspan", 4);
-         if (games.status.status === "Final" &&  games.save_pitcher.first !="" || null){
+         if(games.hasOwnProperty('away_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')){
+         venuetempColumn.innerHTML = "Away Pitcher: "+ games.away_probable_pitcher.first + " " +games.away_probable_pitcher.last + "    ERA: " +games.away_probable_pitcher.era; 
+         } else if  (games.status.status === "Final" &&  games.save_pitcher.first !="" || null){
          venuetempColumn.innerHTML = "Save:  " + games.save_pitcher.first + " " + games.save_pitcher.last;
-		 } else if (games.status.status != "Final"){
-		 venuetempColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " "+  games.time_zone;
-		 } else {
+		 }  else {
 		 venuetempColumn.innerHTML = " ";	
 		 }
 		 venuetemp.appendChild(venuetempColumn);
          gameTable.appendChild(venuetemp);
+         
+         var venue2temp = document.createElement("tr");
+         var venue2tempColumn = document.createElement("td");
+         venue2tempColumn.className= "xsmall bright";
+         venue2tempColumn.setAttribute("colspan", 4);
+         if(games.status.status != "Final"){
+          venue2tempColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " "+  games.time_zone; 
+         } 
+		 venue2temp.appendChild(venuetempColumn);
+         gameTable.appendChild(venue2temp);
+         
+         
          
          top.appendChild(gameTable);
          wrapper.appendChild(top);
