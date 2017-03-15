@@ -16,7 +16,7 @@
          fadeSpeed: 4,
          rotateInterval: 5 * 1000,
          header: true,
-         logo: true,
+         logo: false,
      },
 
      // Define required scripts.
