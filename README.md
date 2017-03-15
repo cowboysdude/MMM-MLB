@@ -9,8 +9,8 @@ npm install
 
 ______________CONFIG.JS______________________
 
-    {
-      disabled: false,
+                     {
+                        disabled: false,
 			module: 'MMM-MLB',
 			position: 'top_center',
 			config: {
@@ -18,7 +18,7 @@ ______________CONFIG.JS______________________
 				header: true,
 				logo: true
 			}
-		},
+		   },
  ___________________________________________
  
  *To use MLB logo header MUST be set to true
