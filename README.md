@@ -20,7 +20,7 @@ ______________CONFIG.JS______________________
 			}
 		   },
  ___________________________________________
- 
+ *madWidth best to set to 350 MIN .. 400px is best!
  *To use MLB logo header MUST be set to true
  
  Custom.css colors you can configure:
