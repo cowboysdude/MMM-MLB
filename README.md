@@ -15,12 +15,15 @@ ______________CONFIG.JS______________________
 			position: 'top_center',
 			config: {
 				maxWidth: "400px",
-				header: false
+				header: true,
+				logo: true
 			}
 		},
  ___________________________________________
  
- Custom.css colors you can change:
+ *To use MLB logo header MUST be set to true
+ 
+ Custom.css colors you can configure:
  
     
           .MMM-MLB .header 
@@ -30,7 +33,12 @@ ______________CONFIG.JS______________________
           .MMM-MLB .e 
           .MMM-MLB .hometeam 
           .MMM-MLB .awayteam 
-    
+	  .MMM-MLB .status2
+          .MMM-MLB .status3 
+ 	  .MMM-MLB .status4
+	  
+	  
+	  
 ![alt tag](http://www.dallascowboyschat.com/mm/progress.JPG)
 
 ![alt tag](http://www.dallascowboyschat.com/mm/progress2.JPG)
