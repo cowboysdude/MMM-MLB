@@ -1,13 +1,15 @@
+
 .MMM-MLB .wrapper{
   text-align: justify;
+  width: 450px;
 }
 .MMM-MLB .header {
   color: #fff;
   text-align: center;
 }
 .MMM-MLB .status {
-  color: #fe0127;
-  font-size: 17px;
+  color: #aeb3c1;
+  font-size: 18px;
 }
 .MMM-MLB .r {
   color: #c6d9d0;
@@ -27,4 +29,18 @@
 .MMM-MLB .logo {
 	height: 25px;
 	width: 25px;
+}
+.MMM-MLB .emblem {
+	height: 12%;
+	width: 12%;
+	margin-right: 15px;
+}
+.MMM-MLB .status2 {
+	
+}
+.MMM-MLB .status3 {
+	
+}
+.MMM-MLB .status4 {
+	
 }
