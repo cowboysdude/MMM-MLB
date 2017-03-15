@@ -1,4 +1,4 @@
- /* Magic Mirror
+/* Magic Mirror
   * Module: MMM-MLB
   *
   * By cowboysdude
@@ -16,6 +16,7 @@
          fadeSpeed: 4,
          rotateInterval: 5 * 1000,
          header: true,
+         logo: true,
      },
 
      // Define required scripts.
@@ -49,10 +50,14 @@
          wrapper.className = "wrapper";
          wrapper.style.maxWidth = this.config.maxWidth;
 
-         if (this.config.header === true) {
+             if (this.config.header === true) {
              var header = document.createElement("header");
              header.classList.add("header");
-             header.innerHTML = "MLB Scores     " + moment().format('MM/DD/YYYY');
+             if (this.config.logo === true){
+			 header.innerHTML = "<img class='emblem' src='modules/MMM-MLB/icons/mlb.png'>    MLB Scores     " + moment().format('MM/DD/YYYY');
+			 } else {
+             header.innerHTML = " MLB Scores     " + moment().format('MM/DD/YYYY');
+              }
              wrapper.appendChild(header);
          }
 
@@ -193,7 +198,7 @@
 
              var statusTemp = document.createElement("tr");
              var statusTempColumn = document.createElement("td");
-             statusTempColumn.className = "xsmall bright";
+             statusTempColumn.classList.add("xsmall", "dimmed", "status2");
              statusTempColumn.setAttribute("colspan", 1);
              if (games.hasOwnProperty('home_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
                  statusTempColumn.innerHTML = "Home Pitcher: " + games.home_probable_pitcher.first + " " + games.home_probable_pitcher.last + "    ERA: " + games.away_probable_pitcher.era;
@@ -210,7 +215,7 @@
 
              var venuetemp = document.createElement("tr");
              var venuetempColumn = document.createElement("td");
-             venuetempColumn.className = "xsmall bright";
+             venuetempColumn.classList.add("xsmall", "dimmed", "status3");
              venuetempColumn.setAttribute("colspan", 4);
              if (games.hasOwnProperty('away_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
                  venuetempColumn.innerHTML = "Away Pitcher: " + games.away_probable_pitcher.first + " " + games.away_probable_pitcher.last + "    ERA: " + games.away_probable_pitcher.era;
@@ -222,17 +227,15 @@
              venuetemp.appendChild(venuetempColumn);
              gameTable.appendChild(venuetemp);
 
-             var venue2temp = document.createElement("tr");
-             var venue2tempColumn = document.createElement("td");
-             venue2tempColumn.className = "xsmall bright";
-             venue2tempColumn.setAttribute("colspan", 4);
-             if (games.status.status != "Final") {
-                 venue2tempColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " " + games.time_zone;
+             var venueGame = document.createElement("tr");
+             var venueGameColumn = document.createElement("td");
+             venueGameColumn.classList.add("xsmall", "dimmed", "status4");
+             venueGameColumn.setAttribute("colspan", 4);
+             if (games.status.status !== "Final" || "Warm Up") {
+             venueGameColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " " + games.time_zone;
              }
-             venue2temp.appendChild(venuetempColumn);
-             gameTable.appendChild(venue2temp);
-
-
+             venueGame.appendChild(venueGameColumn);
+             gameTable.appendChild(venueGame);
 
              top.appendChild(gameTable);
              wrapper.appendChild(top);
