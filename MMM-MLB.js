@@ -39,6 +39,7 @@
          this.activeItem = 0;
          this.rotateInterval = null;
          this.scheduleUpdate();
+         this.standings = false;
      },
 
      getDom: function() {
@@ -293,6 +294,40 @@
                  this.scheduleCarousel();
              }
              this.updateDom(this.config.animationSpeed);
+         } else if(notification === 'STANDINGS_RESULTS') {
+             this.standings = payload;
+             this.updateDom(this.config.animationSpeed);
          }
      },
+
+     notificationReceived: function (notification, payload, sender) {
+         if(notification === "ALL_MODULES_STARTED"){
+             this.sendNotification("REGISTER_VOICE_MODULE", {
+                 mode: "BASEBALL",
+                 sentences: [
+                     "SHOW AMERICAN LEAGUE STANDINGS",
+                     "SHOW NATIONAL LEAGUE STANDINGS",
+                     "HIDE STANDINGS"
+                 ]
+             });
+         } else if(notification === "VOICE_BASEBALL" && sender.name === "MMM-voice"){
+             this.checkCommands(payload);
+         } else if(notification === "VOICE_MODE_CHANGED" && sender.name === "MMM-voice" && payload.old === "BASEBALL"){
+             this.standings = false;
+             this.updateDom(this.config.animationSpeed);
+         }
+     },
+
+     checkCommands: function(data){
+         if(/(STANDINGS)/g.test(data)){
+             if(/(SHOW)/g.test(data) && /(AMERICAN)/g.test(data)){
+                 this.sendSocketNotification('GET_STANDINGS', "AMERICAN");
+             } else if(/(SHOW)/g.test(data) && /(NATIONAL)/g.test(data)) {
+                 this.sendSocketNotification('GET_STANDINGS', "NATIONAL");
+             } else if(/(HIDE)/g.test(data)) {
+                 this.standings = false;
+                 this.updateDom(this.config.animationSpeed);
+             }
+         }
+     }
  });
