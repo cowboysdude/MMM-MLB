@@ -201,7 +201,7 @@
              statusTempColumn.classList.add("xsmall", "dimmed", "status2");
              statusTempColumn.setAttribute("colspan", 1);
              if (games.hasOwnProperty('home_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
-                 statusTempColumn.innerHTML = "Home Pitcher: " + games.home_probable_pitcher.first + " " + games.home_probable_pitcher.last + "    ERA: " + games.away_probable_pitcher.era;
+                 statusTempColumn.innerHTML = "Home Pitcher: " + games.home_probable_pitcher.first + " " + games.home_probable_pitcher.last + "    ERA: " + games.home_probable_pitcher.era;
              } else if (games.status.status === "Final" && games.winning_pitcher.first != "" || null) {
                  statusTempColumn.innerHTML = "Winning Pitcher: " + games.winning_pitcher.first + " " + games.winning_pitcher.last;
              } else if (games.status.status === "Final" && games.winning_pitcher.first === "") {
