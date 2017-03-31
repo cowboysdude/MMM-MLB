@@ -286,13 +286,8 @@
 		     
 		     standingsTable.appendChild(dataRow); 
 			
-			//create the data rows go ahead  that is our data for the table nah cant see a for loop yet Shouldn't that be before the data? correct'
-			// that should give me a loop of data if you think so then test it OK Stop laughing LOL shut down my cam right nw  There it works :)  Just have to have the right data..IF I have the loop correct i can see some issues Not seeing it check to what and hof often you appendChildwait a sec there is even more stuff ^^   Hahtaha r means table row and you put that in 3 different rows so i just did some placeholders to see if we put it right wins 5 looses 3 ok shall we try it why not
 			}
-			
-			wrapper.appendChild(standingsTable); //hopefully we can see something now  yeah I think so hahahahah ok try to replace dummy data
-// PERFECT  now I just have to go through and create all the tables... BUT I also have to do if statements because I have to sort by conference [American, National] abd by divisions... that I can figure out :)
-			
+			wrapper.appendChild(standingsTable);
 		}
 
 		return wrapper;
