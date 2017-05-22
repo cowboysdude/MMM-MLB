@@ -4,8 +4,6 @@
   "description": "MLB Scoreboard for MagicMirror2",
   "main": "MMM-MLB.js",
   "dependencies": {
-    "moment": "^2.17.1",
-    "request": "^2.81.0"
   },
   "devDependencies": {},
   "scripts": {
