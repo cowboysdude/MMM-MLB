@@ -3,10 +3,6 @@
 
 git clone https://github.com/cowboysdude/MMM-MLB
 
-~MagicMirror/modules/MMM-MLB
-
-npm install
-
 ______________CONFIG.JS______________________
 
                      {
