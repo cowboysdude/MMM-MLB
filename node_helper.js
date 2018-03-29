@@ -69,8 +69,7 @@ module.exports = NodeHelper.create({
          });
     },
     
-    // okay what did I do? I didn't change anything jst worked on the table'
-    //that all I added after it quit working because I was getting an outof data but it's not working because it's not firing anyway  sorry I have been out with the dog so I didnt see anything what exactly isnt working anymore can you still get the matches as you had in the beginning?  yes it's this not working'
+    
     fileWrite: function() {
         fs.writeFile(this.path, JSON.stringify(this.standings), function(err) {
             if (err) {
