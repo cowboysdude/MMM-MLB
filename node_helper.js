@@ -26,13 +26,16 @@ module.exports = NodeHelper.create({
     	console.log("Starting module: " + this.name);
     },
 
-    getMLB: function(url) {
-    	var nowYear = moment().format('YYYY'); 
-        var nowMonth = moment().format('MM');
-        var nowDay = moment().format('DD');
+	getMLB: function() {
+		function z(n) { return ((n < 10) ? "0" : "") + n; }
+		var date = new Date();
+		if (date.getUTCHours() < 15) {
+			date.setUTCDate(date.getUTCDate() - 1);
+		}
+		var url_date = "year_" + date.getUTCFullYear() + "/month_" + z(date.getUTCMonth() + 1) + "/day_" + z(date.getUTCDate());
     	
         request({
-            url: ("http://gd2.mlb.com/components/game/mlb/year_"+ nowYear +"/month_"+nowMonth+"/day_"+nowDay+"/master_scoreboard.json"),
+            url: "http://gd2.mlb.com/components/game/mlb/" + url_date + "/master_scoreboard.json",
             method: 'GET'
         }, (error, response, body) => {
             if (!error && response.statusCode == 200) {
