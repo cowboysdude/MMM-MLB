@@ -17,7 +17,9 @@
          rotateInterval: 5 * 1000,
          header: true,
          logo: false,
-         focus_on: []
+         focus_on: [],
+         showStatus: true,
+         showVenue: true,
      },
 
      // Define required scripts.
@@ -141,46 +143,49 @@
 						gameTable.appendChild(makeStatRow(games, "away"));
 						gameTable.appendChild(makeStatRow(games, "home"));
 
-		        var statusTemp = document.createElement("tr");
-		        var statusTempColumn = document.createElement("td");
-		        statusTempColumn.classList.add("xsmall", "dimmed", "status2");
-		        statusTempColumn.setAttribute("colspan", 1);
-		        if (games.hasOwnProperty('home_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
-		            statusTempColumn.innerHTML = "Home Pitcher: " + games.home_probable_pitcher.first + " " + games.home_probable_pitcher.last + "    ERA: " + games.home_probable_pitcher.era;
-		        } else if (games.status.status === "Final" && games.winning_pitcher.first != "" || null) {
-		            statusTempColumn.innerHTML = "Winning Pitcher: " + games.winning_pitcher.first + " " + games.winning_pitcher.last;
-		        } else if (games.status.status === "Final" && games.winning_pitcher.first === "") {
-		            statusTempColumn.innerHTML = "Winning Pitcher: None listed";
-		        } else {
-		            statusTempColumn.innerHTML = "In Progress";
-		        }
-		        statusTemp.appendChild(statusTempColumn);
-		        gameTable.appendChild(statusTemp);
+						if (this.config.showStatus) {
+							var statusTemp = document.createElement("tr");
+							var statusTempColumn = document.createElement("td");
+							statusTempColumn.classList.add("xsmall", "dimmed", "status2");
+							statusTempColumn.setAttribute("colspan", 1);
+							if (games.hasOwnProperty('home_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
+									statusTempColumn.innerHTML = "Home Pitcher: " + games.home_probable_pitcher.first + " " + games.home_probable_pitcher.last + "    ERA: " + games.home_probable_pitcher.era;
+							} else if (games.status.status === "Final" && games.winning_pitcher.first != "" || null) {
+									statusTempColumn.innerHTML = "Winning Pitcher: " + games.winning_pitcher.first + " " + games.winning_pitcher.last;
+							} else if (games.status.status === "Final" && games.winning_pitcher.first === "") {
+									statusTempColumn.innerHTML = "Winning Pitcher: None listed";
+							} else {
+									statusTempColumn.innerHTML = "In Progress";
+							}
+							statusTemp.appendChild(statusTempColumn);
+							gameTable.appendChild(statusTemp);
+						}
 
+						if (this.config.showVenue) {
+							var venuetemp = document.createElement("tr");
+							var venuetempColumn = document.createElement("td");
+							venuetempColumn.classList.add("xsmall", "dimmed", "status3");
+							venuetempColumn.setAttribute("colspan", 4);
+							if (games.hasOwnProperty('away_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
+									venuetempColumn.innerHTML = "Away Pitcher: " + games.away_probable_pitcher.first + " " + games.away_probable_pitcher.last + "    ERA: " + games.away_probable_pitcher.era;
+							} else if (games.status.status === "Final" && games.save_pitcher.first != "" || null) {
+									venuetempColumn.innerHTML = "Save:  " + games.save_pitcher.first + " " + games.save_pitcher.last;
+							} else {
+									venuetempColumn.innerHTML = " ";
+							}
+							venuetemp.appendChild(venuetempColumn);
+							gameTable.appendChild(venuetemp);
 
-		        var venuetemp = document.createElement("tr");
-		        var venuetempColumn = document.createElement("td");
-		        venuetempColumn.classList.add("xsmall", "dimmed", "status3");
-		        venuetempColumn.setAttribute("colspan", 4);
-		        if (games.hasOwnProperty('away_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
-		            venuetempColumn.innerHTML = "Away Pitcher: " + games.away_probable_pitcher.first + " " + games.away_probable_pitcher.last + "    ERA: " + games.away_probable_pitcher.era;
-		        } else if (games.status.status === "Final" && games.save_pitcher.first != "" || null) {
-		            venuetempColumn.innerHTML = "Save:  " + games.save_pitcher.first + " " + games.save_pitcher.last;
-		        } else {
-		            venuetempColumn.innerHTML = " ";
-		        }
-		        venuetemp.appendChild(venuetempColumn);
-		        gameTable.appendChild(venuetemp);
-
-		        var venueGame = document.createElement("tr");
-		        var venueGameColumn = document.createElement("td");
-		        venueGameColumn.classList.add("xsmall", "dimmed", "status4");
-		        venueGameColumn.setAttribute("colspan", 4);
-		        if (games.status.status !== "Final" || "Warm Up") {
-		            venueGameColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " " + games.time_zone;
-		        }
-		        venueGame.appendChild(venueGameColumn);
-		        gameTable.appendChild(venueGame);
+							var venueGame = document.createElement("tr");
+							var venueGameColumn = document.createElement("td");
+							venueGameColumn.classList.add("xsmall", "dimmed", "status4");
+							venueGameColumn.setAttribute("colspan", 4);
+							if (games.status.status !== "Final" || "Warm Up") {
+									venueGameColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " " + games.time_zone;
+							}
+							venueGame.appendChild(venueGameColumn);
+							gameTable.appendChild(venueGame);
+						}
 
 		        top.appendChild(gameTable);
 		        wrapper.appendChild(top);
