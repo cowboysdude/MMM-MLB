@@ -11,14 +11,13 @@
   color: #aeb3c1;
   font-size: 18px;
 }
-.MMM-MLB .r {
+.MMM-MLB .rhe-header {
   color: #c6d9d0;
+  text-align: center;
 }
-.MMM-MLB .h {
-  color: #c6d9d0;
-}
-.MMM-MLB .e {
-  color: #c6d9d0;
+.MMM-MLB .rhe {
+  color: #e4e4e4;
+  text-align: center;
 }
 .MMM-MLB .hometeam {
   color: #e4e4e4;

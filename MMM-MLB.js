@@ -17,7 +17,9 @@
          rotateInterval: 5 * 1000,
          header: true,
          logo: false,
-         focus_on: []
+         focus_on: [],
+         showStatus: true,
+         showVenue: true,
      },
 
      // Define required scripts.
@@ -66,6 +68,35 @@
 		
 		if (this.standings === false) {
 		    
+			function makeStatCell(games, stat, team) {
+				var cell = document.createElement("td");
+				cell.setAttribute("colspan", 1);
+				cell.classList.add("rhe");
+				if (games.status.status != "Preview") {
+					cell.innerHTML = games.linescore[stat][team] || "0";
+				} else {
+					cell.innerHTML = "0";
+				}
+				return cell;
+			}
+
+			function makeStatRow(games, team) {
+				var team_name = games[team + "_team_name"];
+				var row = document.createElement("tr");
+
+				var cell = document.createElement("td");
+				cell.setAttribute("colspan", 3);
+				cell.classList.add("awayteam");
+				cell.innerHTML = '<img class="logo" src="modules/MMM-MLB/icons/' + team_name + '.png"> ' + team_name + " <span class=\"xsmall\">(" + games[team + "_win"] + "-" + games[team + "_loss"] + ")</span>";
+				row.appendChild(cell);
+
+				row.appendChild(makeStatCell(games, "r", team));
+				row.appendChild(makeStatCell(games, "h", team));
+				row.appendChild(makeStatCell(games, "e", team));
+
+				return row;
+			}
+
 		    var games = this.mlb;
 		    var gkeys = Object.keys(this.mlb);
 		    if (gkeys.length > 0) {
@@ -88,159 +119,73 @@
 		            teamcolumn.innerHTML = games.status.status;
 		        }
 		        firstrow.appendChild(teamcolumn);
-		        gameTable.appendChild(firstrow);
 
 		        var runscolumn = document.createElement("th");
 		        runscolumn.setAttribute("colspan", 1);
-		        runscolumn.classList.add("r");
+		        runscolumn.classList.add("rhe-header");
 		        runscolumn.innerHTML = "R";
 		        firstrow.appendChild(runscolumn);
 		        gameTable.appendChild(firstrow);
 
 		        var hitscolumn = document.createElement("th");
 		        hitscolumn.setAttribute("colspan", 1);
-		        hitscolumn.classList.add("h");
+		        hitscolumn.classList.add("rhe-header");
 		        hitscolumn.innerHTML = "H";
 		        firstrow.appendChild(hitscolumn);
-		        gameTable.appendChild(firstrow);
 
 		        var ecolumn = document.createElement("th");
 		        ecolumn.setAttribute("colspan", 1);
-		        ecolumn.classList.add("e");
+		        ecolumn.classList.add("rhe-header");
 		        ecolumn.innerHTML = "E";
 		        firstrow.appendChild(ecolumn);
 		        gameTable.appendChild(firstrow);
 
-		        var awayTemp = document.createElement("tr");
-		        var awayTempColumn = document.createElement("td");
-		        var awayImg = '<img class="logo" src="modules/MMM-MLB/icons/' + games.away_team_name + '.png"> ' + games.away_team_name;
-				var awayImg = awayImg;
-		        awayTempColumn.setAttribute("colspan", 3);
-		        awayTempColumn.classList.add("awayteam");
-		        awayTempColumn.innerHTML = awayImg;
-		        awayTemp.appendChild(awayTempColumn);
-		        gameTable.appendChild(awayTemp);
+						gameTable.appendChild(makeStatRow(games, "away"));
+						gameTable.appendChild(makeStatRow(games, "home"));
 
-		        var awayScoreColumn = document.createElement("td");
-		        awayScoreColumn.setAttribute("colspan", 1);
-		        if (games.status.status != "Preview") {
-		            awayScoreColumn.innerHTML = games.linescore.r.away === "" || undefined || null ? "0" : games.linescore.r.away;
-		            awayTemp.appendChild(awayScoreColumn);
-		            gameTable.appendChild(awayTemp);
-		        } else {
-		            awayScoreColumn.innerHTML = "0";
-		            awayTemp.appendChild(awayScoreColumn);
-		            gameTable.appendChild(awayTemp);
-		        }
+						if (this.config.showStatus) {
+							var statusTemp = document.createElement("tr");
+							var statusTempColumn = document.createElement("td");
+							statusTempColumn.classList.add("xsmall", "dimmed", "status2");
+							statusTempColumn.setAttribute("colspan", 1);
+							if (games.hasOwnProperty('home_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
+									statusTempColumn.innerHTML = "Home Pitcher: " + games.home_probable_pitcher.first + " " + games.home_probable_pitcher.last + "    ERA: " + games.home_probable_pitcher.era;
+							} else if (games.status.status === "Final" && games.winning_pitcher.first != "" || null) {
+									statusTempColumn.innerHTML = "Winning Pitcher: " + games.winning_pitcher.first + " " + games.winning_pitcher.last;
+							} else if (games.status.status === "Final" && games.winning_pitcher.first === "") {
+									statusTempColumn.innerHTML = "Winning Pitcher: None listed";
+							} else {
+									statusTempColumn.innerHTML = "In Progress";
+							}
+							statusTemp.appendChild(statusTempColumn);
+							gameTable.appendChild(statusTemp);
+						}
 
-		        var awayHitsColumn = document.createElement("td");
-		        awayHitsColumn.setAttribute("colspan", 1);
-		        if (games.status.status != "Preview") {
-		            awayHitsColumn.innerHTML = games.linescore.h.away === "" || undefined || null ? "0" : games.linescore.h.away;
-		            awayTemp.appendChild(awayHitsColumn);
-		            gameTable.appendChild(awayTemp);
-		        } else {
-		            awayHitsColumn.innerHTML = "0";
-		            awayTemp.appendChild(awayHitsColumn);
-		            gameTable.appendChild(awayTemp);
-		        }
+						if (this.config.showVenue) {
+							var venuetemp = document.createElement("tr");
+							var venuetempColumn = document.createElement("td");
+							venuetempColumn.classList.add("xsmall", "dimmed", "status3");
+							venuetempColumn.setAttribute("colspan", 4);
+							if (games.hasOwnProperty('away_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
+									venuetempColumn.innerHTML = "Away Pitcher: " + games.away_probable_pitcher.first + " " + games.away_probable_pitcher.last + "    ERA: " + games.away_probable_pitcher.era;
+							} else if (games.status.status === "Final" && games.save_pitcher.first != "" || null) {
+									venuetempColumn.innerHTML = "Save:  " + games.save_pitcher.first + " " + games.save_pitcher.last;
+							} else {
+									venuetempColumn.innerHTML = " ";
+							}
+							venuetemp.appendChild(venuetempColumn);
+							gameTable.appendChild(venuetemp);
 
-		        var awayErrorColumn = document.createElement("td");
-		        awayErrorColumn.setAttribute("colspan", 1);
-		        if (games.status.status != "Preview") {
-		            awayErrorColumn.innerHTML = games.linescore.e.away === "" || undefined || null ? "0" : games.linescore.e.away;
-		            awayTemp.appendChild(awayErrorColumn);
-		            gameTable.appendChild(awayTemp);
-		        } else {
-		            awayErrorColumn.innerHTML = "0";
-		            awayTemp.appendChild(awayErrorColumn);
-		            gameTable.appendChild(awayTemp);
-		        }
-
-		        var homeTemp = document.createElement("tr");
-		        var homeTempColumn = document.createElement("td");
-		        var homeImg = '<img class="logo" src="modules/MMM-MLB/icons/' + games.home_team_name + '.png"> ' + games.home_team_name;
-		        homeTempColumn.setAttribute("colspan", 3);
-		        homeTempColumn.classList.add("hometeam");
-		        homeTempColumn.innerHTML = '<img class="logo" src="modules/MMM-MLB/icons/' + games.home_team_name + '.png"> ' + games.home_team_name;
-		        homeTemp.appendChild(homeTempColumn);
-		        gameTable.appendChild(homeTemp);
-
-		        var homeScoreColumn = document.createElement("td");
-		        homeScoreColumn.setAttribute("colspan", 1);
-		        if (games.status.status != "Preview") {
-		            homeScoreColumn.innerHTML = games.home_team_runs === "" || undefined || null ? "0" : games.linescore.r.home;
-		            homeTemp.appendChild(homeScoreColumn);
-		            gameTable.appendChild(homeTemp);
-		        } else {
-		            homeScoreColumn.innerHTML = "0";
-		            homeTemp.appendChild(homeScoreColumn);
-		            gameTable.appendChild(homeTemp);
-		        }
-		        var homeHitsColumn = document.createElement("td");
-		        homeHitsColumn.setAttribute("colspan", 1);
-		        if (games.status.status != "Preview") {
-		            homeHitsColumn.innerHTML = games.linescore.h.home === "" || undefined || null ? "0" : games.linescore.h.home;
-		            homeTemp.appendChild(homeHitsColumn);
-		            gameTable.appendChild(homeTemp);
-		        } else {
-		            homeHitsColumn.innerHTML = "0";
-		            homeTemp.appendChild(homeHitsColumn);
-		            gameTable.appendChild(homeTemp);
-		        }
-
-		        var homeErrorColumn = document.createElement("td");
-		        homeErrorColumn.setAttribute("colspan", 1);
-		        if (games.status.status != "Preview") {
-		            homeErrorColumn.innerHTML = games.linescore.e.home === "" || undefined || null ? "0" : games.linescore.e.home;
-		            homeTemp.appendChild(homeErrorColumn);
-		            gameTable.appendChild(homeTemp);
-		        } else {
-		            homeErrorColumn.innerHTML = "0";
-		            homeTemp.appendChild(homeErrorColumn);
-		            gameTable.appendChild(homeTemp);
-		        }
-
-		        var statusTemp = document.createElement("tr");
-		        var statusTempColumn = document.createElement("td");
-		        statusTempColumn.classList.add("xsmall", "dimmed", "status2");
-		        statusTempColumn.setAttribute("colspan", 1);
-		        if (games.hasOwnProperty('home_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
-		            statusTempColumn.innerHTML = "Home Pitcher: " + games.home_probable_pitcher.first + " " + games.home_probable_pitcher.last + "    ERA: " + games.home_probable_pitcher.era;
-		        } else if (games.status.status === "Final" && games.winning_pitcher.first != "" || null) {
-		            statusTempColumn.innerHTML = "Winning Pitcher: " + games.winning_pitcher.first + " " + games.winning_pitcher.last;
-		        } else if (games.status.status === "Final" && games.winning_pitcher.first === "") {
-		            statusTempColumn.innerHTML = "Winning Pitcher: None listed";
-		        } else {
-		            statusTempColumn.innerHTML = "In Progress";
-		        }
-		        statusTemp.appendChild(statusTempColumn);
-		        gameTable.appendChild(statusTemp);
-
-
-		        var venuetemp = document.createElement("tr");
-		        var venuetempColumn = document.createElement("td");
-		        venuetempColumn.classList.add("xsmall", "dimmed", "status3");
-		        venuetempColumn.setAttribute("colspan", 4);
-		        if (games.hasOwnProperty('away_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
-		            venuetempColumn.innerHTML = "Away Pitcher: " + games.away_probable_pitcher.first + " " + games.away_probable_pitcher.last + "    ERA: " + games.away_probable_pitcher.era;
-		        } else if (games.status.status === "Final" && games.save_pitcher.first != "" || null) {
-		            venuetempColumn.innerHTML = "Save:  " + games.save_pitcher.first + " " + games.save_pitcher.last;
-		        } else {
-		            venuetempColumn.innerHTML = " ";
-		        }
-		        venuetemp.appendChild(venuetempColumn);
-		        gameTable.appendChild(venuetemp);
-
-		        var venueGame = document.createElement("tr");
-		        var venueGameColumn = document.createElement("td");
-		        venueGameColumn.classList.add("xsmall", "dimmed", "status4");
-		        venueGameColumn.setAttribute("colspan", 4);
-		        if (games.status.status !== "Final" || "Warm Up") {
-		            venueGameColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " " + games.time_zone;
-		        }
-		        venueGame.appendChild(venueGameColumn);
-		        gameTable.appendChild(venueGame);
+							var venueGame = document.createElement("tr");
+							var venueGameColumn = document.createElement("td");
+							venueGameColumn.classList.add("xsmall", "dimmed", "status4");
+							venueGameColumn.setAttribute("colspan", 4);
+							if (games.status.status !== "Final" || "Warm Up") {
+									venueGameColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " " + games.time_zone;
+							}
+							venueGame.appendChild(venueGameColumn);
+							gameTable.appendChild(venueGame);
+						}
 
 		        top.appendChild(gameTable);
 		        wrapper.appendChild(top);
