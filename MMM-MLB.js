@@ -299,7 +299,7 @@ Module.register("MMM-MLB", {
         animationSpeed: 10,
         initialLoadDelay: 2500, // 2.5 seconds delay
         retryDelay: 1500,
-        maxWidth: "300px",
+        maxWidth: "400px",
         fadeSpeed: 4,
         rotateInterval: 5 * 1000,
         header: true,
