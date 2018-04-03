@@ -204,8 +204,12 @@ function makeInProgressWidget(game) {
     var row = document.createElement("tr");
     var cell = document.createElement("th");
     cell.classList.add("align-left", "status");
-    cell.innerHTML = sprintf("{} {}", game.status.inning_state.substring(0, 3),
-        getOrdinal(game.status.inning));
+    if (game.status.status === "In Progress") {
+        cell.innerHTML = sprintf("{} {}", game.status.inning_state.substring(0, 3),
+            getOrdinal(game.status.inning));
+    } else {
+        cell.innerHTML = game.status.status;
+    }
     row.appendChild(cell);
 
     cell = document.createElement("td");
