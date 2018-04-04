@@ -26,20 +26,24 @@
   color: #e4e4e4;
 }
 .MMM-MLB .logo {
-	height: 25px;
-	width: 25px;
+  height: 25px;
+  width: 25px;
+}
+.MMM-MLB .runners {
+  width: 75px;
+  height: 50px;
+}
+.MMM-MLB .center {
+  text-align: center;
 }
 .MMM-MLB .emblem {
-	height: 12%;
-	width: 12%;
-	margin-right: 15px;
+  height: 12%;
+  width: 12%;
+  margin-right: 15px;
 }
 .MMM-MLB .status2 {
-	
 }
 .MMM-MLB .status3 {
-	
 }
 .MMM-MLB .status4 {
-	
 }

@@ -2,338 +2,524 @@
   * Module: MMM-MLB
   *
   * By cowboysdude
-  * 
+  *
   */
- Module.register("MMM-MLB", {
 
-     // Module config defaults.
-     defaults: {
-         updateInterval: 3*60000, // every 3 minutes
-         animationSpeed: 10,
-         initialLoadDelay: 2500, // 2.5 seconds delay
-         retryDelay: 1500,   
-         maxWidth: "300px",
-         fadeSpeed: 4,
-         rotateInterval: 5 * 1000,
-         header: true,
-         logo: false,
-         focus_on: [],
-         showStatus: true,
-         showVenue: true,
-     },
+"use strict";
 
-     // Define required scripts.
-     getScripts: function() {
-         return ["moment.js"];
-     },
+function sprintf(fmt) {
+    var parts = fmt.split("{}");
+    var message = parts[0];
+    var i;
 
-     getStyles: function() {
-         return ["MMM-MLB.css"];
-     },
+    for (i = 1; i < parts.length; ++i) {
+        message += arguments[i] + parts[i];
+    }
+
+    return message;
+}
+
+function getOrdinal(i) {
+    var j = i % 10;
+    var k = i % 100;
+    if (j == 1 && k != 11) {
+        return i + "st";
+    }
+    if (j == 2 && k != 12) {
+        return i + "nd";
+    }
+    if (j == 3 && k != 13) {
+        return i + "rd";
+    }
+    return i + "th";
+}
+
+function getRunnersImg(game) {
+    var runners = "runners"
+
+    for (var i = 1; i <= 3; ++i) {
+      if (game.runners_on_base.hasOwnProperty("runner_on_" + i + "b")) {
+          runners += "_" + i + "b";
+      }
+    }
+
+    return sprintf('<img class="runners" src="modules/MMM-MLB/icons/{}.png">', runners);
+}
+
+function makeTeamCell(game, team) {
+    var cell = document.createElement("td");
+    var team_name = game[team + "_team_name"];
+    cell.classList.add(team + "team");
+    cell.innerHTML = sprintf('<img class="logo" src="modules/MMM-MLB/icons/{}.png"> {}', team_name, team_name);
+    if (game.hasOwnProperty(team + "_win") && game.hasOwnProperty(team + "_loss")) {
+        cell.innerHTML += sprintf(' <span class="xsmall dimmed">({}-{})</span>', game[team + "_win"], game[team + "_loss"]);
+    }
+    return cell;
+}
+
+function makeStatCell(game, stat, team) {
+    var cell = document.createElement("td");
+    cell.classList.add("rhe");
+    if (game.status.status != "Preview") {
+        cell.innerHTML = game.linescore[stat][team] || "0";
+    } else {
+        cell.innerHTML = "0";
+    }
+    return cell;
+}
+
+function makeStatRow(game, team) {
+    var row = document.createElement("tr");
+
+    row.appendChild(makeTeamCell(game, team));
+    row.appendChild(makeStatCell(game, "r", team));
+    row.appendChild(makeStatCell(game, "h", team));
+    row.appendChild(makeStatCell(game, "e", team));
+
+    return row;
+}
+
+function getProbablePitcher(game, team) {
+    var name = "Unknown";
+    if (game.hasOwnProperty(team + "_probable_pitcher")) {
+        var data = game[team + "_probable_pitcher"];
+        if (data.name_display_roster !== "") {
+            name = sprintf("{} ({}-{}, {})", data.name_display_roster, data.wins, data.losses, data.era);
+        }
+    }
+    return sprintf("{}: {}", game[team + "_name_abbrev"], name);
+}
+
+function getGamePitcher(game, type) {
+    if (game.hasOwnProperty(type + "_pitcher")) {
+        var data = game[type + "_pitcher"];
+        if (data.name_display_roster !== "") {
+            return sprintf("{} ({}-{}, {})", data.name_display_roster, data.wins, data.losses, data.era);
+        }
+    }
+    return "Unknown";
+}
+
+function getSavePitcher(game) {
+    if (game.hasOwnProperty("save_pitcher")) {
+        var data = game.save_pitcher;
+        if (data.name_display_roster !== "") {
+            return sprintf("{} ({})", data.name_display_roster, data.saves);
+        }
+    }
+    return "";
+}
+
+function makeNoGameWidget(game) {
+    var table = document.createElement("table");
+
+    // Header
+    var row = document.createElement("tr");
+    var cell = document.createElement("th");
+    cell.classList.add("align-left", "status");
+    cell.innerHTML = game.status.status;
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    // Body
+    row = document.createElement("tr");
+    row.appendChild(makeTeamCell(game, "home"));
+    table.appendChild(row);
+
+    return table;
+}
+
+function makePregameWidget(game) {
+    var table = document.createElement("table");
+
+    // Header
+    var row = document.createElement("tr");
+    var cell = document.createElement("th");
+    cell.classList.add("align-left", "status");
+    cell.setAttribute("colspan", 2);
+    cell.innerHTML = game.status.status;
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    // Body
+    row = document.createElement("tr");
+    row.appendChild(makeTeamCell(game, "away"));
+
+    cell = document.createElement("td");
+    cell.setAttribute("rowspan", 2);
+    cell.innerHTML = sprintf("{} {} {}", game.time, game.hm_lg_ampm, game.time_zone);
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    row = document.createElement("tr");
+    row.appendChild(makeTeamCell(game, "home"));
+    table.appendChild(row);
+
+    // Footer
+    row = document.createElement("tr");
+    cell = document.createElement("td");
+    cell.classList.add("xsmall", "dimmed", "status3");
+    cell.setAttribute("colspan", 2);
+    cell.innerHTML = sprintf("{} {}", getProbablePitcher(game, "home"), getProbablePitcher(game, "away"));
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    return table;
+}
+
+function getPostponedReason(game) {
+    var reason_map = {
+        "DC": "Cold",
+        "DS": "Snow",
+        "DI": "Inclement Weather",
+        "DR": "Rain",
+    };
+
+    return (game.status.ind in reason_map) ? reason_map[game.status.ind] : "Postponed";
+}
+
+function makePostponedWidget(game) {
+    var table = document.createElement("table");
+
+    // Header
+    var row = document.createElement("tr");
+    var cell = document.createElement("th");
+    cell.classList.add("align-left", "status");
+    cell.setAttribute("colspan", 2);
+    cell.innerHTML = getPostponedReason(game);
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    // Body
+    row = document.createElement("tr");
+    row.appendChild(makeTeamCell(game, "away"));
+
+    cell = document.createElement("td");
+    cell.setAttribute("rowspan", 2);
+    cell.innerHTML = "Postponed";
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    row = document.createElement("tr");
+    row.appendChild(makeTeamCell(game, "home"));
+    table.appendChild(row);
+
+    return table;
+}
+
+function makeInProgressWidget(game) {
+    var table = document.createElement("table");
+
+    // Header
+    var row = document.createElement("tr");
+    var cell = document.createElement("th");
+    cell.classList.add("align-left", "status");
+    if (game.status.status === "In Progress") {
+        cell.innerHTML = sprintf("{} {}", game.status.inning_state.substring(0, 3),
+            getOrdinal(game.status.inning));
+    } else {
+        cell.innerHTML = game.status.status;
+    }
+    row.appendChild(cell);
+
+    cell = document.createElement("td");
+    cell.classList.add("xsmall", "dimmed", "center");
+    cell.setAttribute("rowspan", 3);
+    cell.innerHTML = sprintf("<br/>{}<br/>{}-{}, {} out", getRunnersImg(game),
+        game.status.b, game.status.s, game.status.o);
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    // Body
+    row = document.createElement("tr");
+    row.appendChild(makeTeamCell(game, "away"));
+    table.appendChild(row);
+
+    row = document.createElement("tr");
+    row.appendChild(makeTeamCell(game, "home"));
+    table.appendChild(row);
+
+    // Footer
+    row = document.createElement("tr");
+    cell = document.createElement("td");
+    cell.classList.add("xsmall", "dimmed", "status3");
+    cell.setAttribute("colspan", 2);
+    cell.innerHTML = sprintf("P: {} ({}-{}, {}) AB: {} ({}-{}, {})",
+        game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era,
+        game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg);
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    return table;
+}
+
+function makePostgameWidget(game) {
+    var table = document.createElement("table");
+
+    // Header
+    var row = document.createElement("tr");
+    var cell = document.createElement("th");
+    cell.classList.add("align-left", "status");
+    cell.innerHTML = game.status.status;
+    if (game.status.inning !== "9") {
+        cell.innerHTML += "/" + game.status.inning;
+    }
+    row.appendChild(cell);
+
+    cell = document.createElement("th");
+    cell.classList.add("rhe-header");
+    cell.innerHTML = "R";
+    row.appendChild(cell);
+
+    cell = document.createElement("th");
+    cell.classList.add("rhe-header");
+    cell.innerHTML = "H";
+    row.appendChild(cell);
+
+    cell = document.createElement("th");
+    cell.classList.add("rhe-header");
+    cell.innerHTML = "E";
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    // Body
+    table.appendChild(makeStatRow(game, "away"));
+    table.appendChild(makeStatRow(game, "home"));
+
+    // Footer
+    row = document.createElement("tr");
+    cell = document.createElement("td");
+    cell.classList.add("xsmall", "dimmed", "status2");
+    cell.setAttribute("colspan", 4);
+    cell.innerHTML = sprintf("W: {} L: {}", getGamePitcher(game, "winning"), getGamePitcher(game, "losing"));
+    if (getSavePitcher(game) !== "") {
+        cell.innerHTML += "<br/>S: " + getSavePitcher(game);
+    }
+    row.appendChild(cell);
+    table.appendChild(row);
+
+    return table;
+}
+
+Module.register("MMM-MLB", {
+
+    // Module config defaults.
+    defaults: {
+        updateInterval: 3*60000, // every 3 minutes
+        animationSpeed: 10,
+        initialLoadDelay: 2500, // 2.5 seconds delay
+        retryDelay: 1500,
+        maxWidth: "400px",
+        fadeSpeed: 4,
+        rotateInterval: 5 * 1000,
+        header: true,
+        logo: false,
+        focus_on: [],
+    },
+
+    // Define required scripts.
+    getScripts: function() {
+        return ["moment.js"];
+    },
+
+    getStyles: function() {
+        return ["MMM-MLB.css"];
+    },
 
      // Define start sequence.
-     start: function() {
-         Log.info("Starting module: " + this.name);
-		 this.sendSocketNotification('CONFIG', this.config);
-         // Set locale.
-         this.week = "";
-         this.mlb = {};
-         this.today = "";
-         this.activeItem = 0;
-         this.rotateInterval = null;
-         this.updateInterval = null;
-         this.scheduleUpdate();
-         this.standings = false;
-         //setTimeout(()=>{this.sendSocketNotification('GET_STANDINGS', "AMERICAN")}, 5000);
-     },
+    start: function() {
+        var self = this;
+        Log.info("Starting module: " + self.name);
+        self.sendSocketNotification('CONFIG', self.config);
+        // Set locale.
+        self.week = "";
+        self.scoreboard = [];
+        self.activeItem = 0;
+        self.rotateInterval = null;
+        self.updateInterval = null;
+        self.scheduleUpdate();
+        self.standings = false;
+        //setTimeout(()=>{self.sendSocketNotification('GET_STANDINGS', "AMERICAN")}, 5000);
+    },
 
 //no longer popups up
 
-     getDom: function() {
-     	var wrapper = document.createElement("div");
-		wrapper.className = "wrapper";
-		wrapper.style.maxWidth = this.config.maxWidth;
+    getDom: function() {
+        var self = this;
+        var wrapper = document.createElement("div");
+        wrapper.className = "wrapper";
+        wrapper.style.maxWidth = self.config.maxWidth;
 
-		if (this.config.header === true) {
-		    var header = document.createElement("header");
-		    header.classList.add("header");
-		    if (this.config.logo === true) {
-		        header.innerHTML = "<img class='emblem' src='modules/MMM-MLB/icons/mlb.png'>    MLB Scores     " + moment().format('MM/DD/YYYY');
-		    } else {
-		        header.innerHTML = " MLB Scores     " + moment().format('MM/DD/YYYY');
-		    }
-		    wrapper.appendChild(header);
-		}
+        if (self.config.header === true) {
+            var header = document.createElement("header");
+            header.classList.add("header");
+            if (self.config.logo === true) {
+                header.innerHTML = "<img class='emblem' src='modules/MMM-MLB/icons/mlb.png'>    MLB Scores     " + moment().format('MM/DD/YYYY');
+            } else {
+                header.innerHTML = " MLB Scores     " + moment().format('MM/DD/YYYY');
+            }
+            wrapper.appendChild(header);
+        }
 
-		
-		if (this.standings === false) {
-		    
-			function makeStatCell(games, stat, team) {
-				var cell = document.createElement("td");
-				cell.setAttribute("colspan", 1);
-				cell.classList.add("rhe");
-				if (games.status.status != "Preview") {
-					cell.innerHTML = games.linescore[stat][team] || "0";
-				} else {
-					cell.innerHTML = "0";
-				}
-				return cell;
-			}
+        if (self.standings === false) {
 
-			function makeStatRow(games, team) {
-				var team_name = games[team + "_team_name"];
-				var row = document.createElement("tr");
+            if (self.scoreboard.length > 0) {
+                if (self.activeItem >= self.scoreboard.length) {
+                    self.activeItem = 0;
+                }
+                var game = self.scoreboard[self.activeItem];
 
-				var cell = document.createElement("td");
-				cell.setAttribute("colspan", 3);
-				cell.classList.add("awayteam");
-				cell.innerHTML = '<img class="logo" src="modules/MMM-MLB/icons/' + team_name + '.png"> ' + team_name + " <span class=\"xsmall\">(" + games[team + "_win"] + "-" + games[team + "_loss"] + ")</span>";
-				row.appendChild(cell);
+                var top = document.createElement("div");
+                top.classList = "small bright";
 
-				row.appendChild(makeStatCell(games, "r", team));
-				row.appendChild(makeStatCell(games, "h", team));
-				row.appendChild(makeStatCell(games, "e", team));
+                if (game.status.status === "No Game Scheduled") {
+                    top.appendChild(makeNoGameWidget(game));
+                } else if (game.status.status === "Postponed") {
+                    top.appendChild(makePostponedWidget(game));
+                } else if (["Preview", "Pre-Game"].includes(game.status.status)) {
+                    top.appendChild(makePregameWidget(game));
+                } else if (["Warmup", "In Progress"].includes(game.status.status)) {
+                    top.appendChild(makeInProgressWidget(game));
+                } else {
+                    top.appendChild(makePostgameWidget(game));
+                }
 
-				return row;
-			}
+                wrapper.appendChild(top);
+            }
+        } else {
+            //ok we have the wrapper already no need to overwrite it
+            var standingsTable = document.createElement("table");
 
-		    var games = this.mlb;
-		    var gkeys = Object.keys(this.mlb);
-		    if (gkeys.length > 0) {
-		        if (this.activeItem >= gkeys.length) {
-		            this.activeItem = 0;
-		        }
-		        var games = this.mlb[gkeys[this.activeItem]];
+            var headerRow = document.createElement("tr");
+            headerRow.classList.add("small", "bright");
 
-		        var top = document.createElement("div");
-		        top.classList = "small bright";
+            var teamLabel = document.createElement("th");
+            teamLabel.innerHTML = "Team";
+            headerRow.appendChild(teamLabel);
 
-		        var gameTable = document.createElement("table");
-		        var firstrow = document.createElement("tr");
-		        var teamcolumn = document.createElement("th");
-		        teamcolumn.setAttribute("colspan", 3);
-		        teamcolumn.classList.add("align-left", "status");
-		        if (games.status.status === "In Progress") {
-		            teamcolumn.innerHTML = (this.getOrdinal(games.status.inning)) + " Inning";
-		        } else {
-		            teamcolumn.innerHTML = games.status.status;
-		        }
-		        firstrow.appendChild(teamcolumn);
+            var winLabel = document.createElement("th");
+            winLabel.innerHTML = "W";
+            headerRow.appendChild(winLabel);
 
-		        var runscolumn = document.createElement("th");
-		        runscolumn.setAttribute("colspan", 1);
-		        runscolumn.classList.add("rhe-header");
-		        runscolumn.innerHTML = "R";
-		        firstrow.appendChild(runscolumn);
-		        gameTable.appendChild(firstrow);
+            var lossLabel = document.createElement("th");
+            lossLabel.innerHTML = "L";
+            headerRow.appendChild(lossLabel);
 
-		        var hitscolumn = document.createElement("th");
-		        hitscolumn.setAttribute("colspan", 1);
-		        hitscolumn.classList.add("rhe-header");
-		        hitscolumn.innerHTML = "H";
-		        firstrow.appendChild(hitscolumn);
+            standingsTable.appendChild(headerRow);
 
-		        var ecolumn = document.createElement("th");
-		        ecolumn.setAttribute("colspan", 1);
-		        ecolumn.classList.add("rhe-header");
-		        ecolumn.innerHTML = "E";
-		        firstrow.appendChild(ecolumn);
-		        gameTable.appendChild(firstrow);
+            for(var i = 0; i < self.standings.length; i++) {
+                var standings = self.standings[i];
 
-						gameTable.appendChild(makeStatRow(games, "away"));
-						gameTable.appendChild(makeStatRow(games, "home"));
+                var dataRow = document.createElement("tr");
+                var teamsShowColumn = document.createElement("td");
+                teamsShowColumn.innerHTML = standings.team_id + " " + standings.rank;
+                dataRow.appendChild(teamsShowColumn);
 
-						if (this.config.showStatus) {
-							var statusTemp = document.createElement("tr");
-							var statusTempColumn = document.createElement("td");
-							statusTempColumn.classList.add("xsmall", "dimmed", "status2");
-							statusTempColumn.setAttribute("colspan", 1);
-							if (games.hasOwnProperty('home_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
-									statusTempColumn.innerHTML = "Home Pitcher: " + games.home_probable_pitcher.first + " " + games.home_probable_pitcher.last + "    ERA: " + games.home_probable_pitcher.era;
-							} else if (games.status.status === "Final" && games.winning_pitcher.first != "" || null) {
-									statusTempColumn.innerHTML = "Winning Pitcher: " + games.winning_pitcher.first + " " + games.winning_pitcher.last;
-							} else if (games.status.status === "Final" && games.winning_pitcher.first === "") {
-									statusTempColumn.innerHTML = "Winning Pitcher: None listed";
-							} else {
-									statusTempColumn.innerHTML = "In Progress";
-							}
-							statusTemp.appendChild(statusTempColumn);
-							gameTable.appendChild(statusTemp);
-						}
 
-						if (this.config.showVenue) {
-							var venuetemp = document.createElement("tr");
-							var venuetempColumn = document.createElement("td");
-							venuetempColumn.classList.add("xsmall", "dimmed", "status3");
-							venuetempColumn.setAttribute("colspan", 4);
-							if (games.hasOwnProperty('away_probable_pitcher') && (games.status.status === 'Preview' || games.status.status === 'Warm up')) {
-									venuetempColumn.innerHTML = "Away Pitcher: " + games.away_probable_pitcher.first + " " + games.away_probable_pitcher.last + "    ERA: " + games.away_probable_pitcher.era;
-							} else if (games.status.status === "Final" && games.save_pitcher.first != "" || null) {
-									venuetempColumn.innerHTML = "Save:  " + games.save_pitcher.first + " " + games.save_pitcher.last;
-							} else {
-									venuetempColumn.innerHTML = " ";
-							}
-							venuetemp.appendChild(venuetempColumn);
-							gameTable.appendChild(venuetemp);
+                var winsShowColumn = document.createElement("td");
+                winsShowColumn.innerHTML = standings.won; //right now..
+                dataRow.appendChild(winsShowColumn);
 
-							var venueGame = document.createElement("tr");
-							var venueGameColumn = document.createElement("td");
-							venueGameColumn.classList.add("xsmall", "dimmed", "status4");
-							venueGameColumn.setAttribute("colspan", 4);
-							if (games.status.status !== "Final" || "Warm Up") {
-									venueGameColumn.innerHTML = games.venue + " Game Time:  " + games.time + "" + games.hm_lg_ampm + " " + games.time_zone;
-							}
-							venueGame.appendChild(venueGameColumn);
-							gameTable.appendChild(venueGame);
-						}
 
-		        top.appendChild(gameTable);
-		        wrapper.appendChild(top);
-		    }
-		} else {
-			//ok we have the wrapper already no need to overwrite it
-			var standingsTable = document.createElement("table");
-			
-			var headerRow = document.createElement("tr");
-			headerRow.classList.add("small", "bright");
-			
-			var teamLabel = document.createElement("th");
-			teamLabel.innerHTML = "Team";
-			headerRow.appendChild(teamLabel);
-			
-			var winLabel = document.createElement("th");
-			winLabel.innerHTML = "W";
-			headerRow.appendChild(winLabel);
-			
-			var lossLabel = document.createElement("th");
-			lossLabel.innerHTML = "L";
-			headerRow.appendChild(lossLabel);
-			
-			standingsTable.appendChild(headerRow);
-			
-			for(var i = 0; i < this.standings.length; i++){ 
-			var standings = this.standings[i];
-			
-			var dataRow = document.createElement("tr");
-            var teamsShowColumn = document.createElement("td");
-		    teamsShowColumn.innerHTML = standings.team_id + " " + standings.rank;
-		    dataRow.appendChild(teamsShowColumn);
-		        
+                var lossShowColumn = document.createElement("td");
+                lossShowColumn.innerHTML = standings.lost; //right now..
+                dataRow.appendChild(lossShowColumn);
 
-		     var winsShowColumn = document.createElement("td");
-		     winsShowColumn.innerHTML = standings.won; //right now..
-		     dataRow.appendChild(winsShowColumn); 
-		     
+                standingsTable.appendChild(dataRow);
+            }
+            wrapper.appendChild(standingsTable);
+        }
 
-		     var lossShowColumn = document.createElement("td");
-		     lossShowColumn.innerHTML = standings.lost; //right now..
-		     dataRow.appendChild(lossShowColumn); 
-		     
-		     standingsTable.appendChild(dataRow); 
-			
-			}
-			wrapper.appendChild(standingsTable);
-		}
-
-		return wrapper;
-     },
-
-     getOrdinal: function(i) {
-         var j = i % 10,
-             k = i % 100;
-         if (j == 1 && k != 11) {
-             return i + "st";
-         }
-         if (j == 2 && k != 12) {
-             return i + "nd";
-         }
-         if (j == 3 && k != 13) {
-             return i + "rd";
-         }
-         return i + "th";
+        return wrapper;
      },
 
 
-     processMLB: function(data) {
-         this.today = data.Today;
-         this.mlb = data.game;
-         this.loaded = true;
-     },
+    processMLB: function(scoreboard) {
+        var self = this;
+        self.scoreboard = scoreboard;
+        self.loaded = true;
+    },
 
 
-     scheduleCarousel: function() {
-         console.log("Showing MLB games for today");
-         this.rotateInterval = setInterval(() => {
-             this.activeItem++;
-             this.updateDom(this.config.animationSpeed);
-         }, this.config.rotateInterval);
-     },
+    scheduleCarousel: function() {
+        var self = this;
+        console.log("Showing MLB games for today");
+        self.rotateInterval = setInterval(() => {
+            self.activeItem++;
+            self.updateDom(self.config.animationSpeed);
+        }, self.config.rotateInterval);
+    },
 
-     scheduleUpdate: function() {
-         this.updateInterval = setInterval(() => {
-             this.getMLB();
-         }, this.config.updateInterval);
-         this.getMLB(this.config.initialLoadDelay);
-     },
-     
 
-     getMLB: function() {
-         this.sendSocketNotification('GET_MLB');
-     },
+    scheduleUpdate: function() {
+        var self = this;
+        self.updateInterval = setInterval(() => {
+            self.getMLB();
+        }, self.config.updateInterval);
+        self.getMLB(self.config.initialLoadDelay);
+    },
 
-     socketNotificationReceived: function(notification, payload) {
-     	console.log(notification);
-         if (notification === 'MLB_RESULTS') {
-             this.processMLB(payload);
-             if (this.rotateInterval == null) {
-                 this.scheduleCarousel();
-             }
-             if (this.updateInterval == null) {
-                 this.scheduleUpdate();
-             }
-             this.updateDom(this.config.animationSpeed);
-         } else if(notification === 'STANDINGS_RESULTS') {
-         	console.log(notification);
-         	console.log(payload);
-             this.standings = payload;
-             clearInterval(this.rotateInterval);
-             clearInterval(this.updateInterval);
-             this.updateDom(this.config.animationSpeed);
-         }
-     },
 
-     notificationReceived: function (notification, payload, sender) {
-         if(notification === "ALL_MODULES_STARTED"){
-             this.sendNotification("REGISTER_VOICE_MODULE", {
-                 mode: "BASEBALL",
-                 sentences: [
-                     "SHOW AMERICAN LEAGUE STANDINGS",
-                     "SHOW NATIONAL LEAGUE STANDINGS",
-                     "HIDE STANDINGS"
-                 ]
-             });
-         } else if(notification === "VOICE_BASEBALL" && sender.name === "MMM-voice"){
-             this.checkCommands(payload);
-         } else if(notification === "VOICE_MODE_CHANGED" && sender.name === "MMM-voice" && payload.old === "BASEBALL"){
-             this.standings = false;
-             this.scheduleCarousel();
-             this.scheduleUpdate();
-             this.updateDom(this.config.animationSpeed);
-         }
-     },
+    getMLB: function() {
+        this.sendSocketNotification('GET_MLB');
+    },
 
-     checkCommands: function(data){
-         if(/(STANDINGS)/g.test(data)){
-             if(/(SHOW)/g.test(data) && /(AMERICAN)/g.test(data)){
-                 this.sendSocketNotification('GET_STANDINGS', "AMERICAN");
-             } else if(/(SHOW)/g.test(data) && /(NATIONAL)/g.test(data)) {
-                 this.sendSocketNotification('GET_STANDINGS', "NATIONAL");
-             } else if(/(HIDE)/g.test(data)) {
-                 this.standings = false;
-                 this.scheduleCarousel();
-                 this.scheduleUpdate();
-                 this.updateDom(this.config.animationSpeed);
-             }
-         }
-     }
+    socketNotificationReceived: function(notification, payload) {
+        var self = this;
+        console.log(notification);
+        if (notification === 'MLB_RESULTS') {
+            self.processMLB(payload);
+            if (self.rotateInterval == null) {
+                self.scheduleCarousel();
+            }
+            if (self.updateInterval == null) {
+                self.scheduleUpdate();
+            }
+            self.updateDom(self.config.animationSpeed);
+        } else if(notification === 'STANDINGS_RESULTS') {
+            console.log(notification);
+            console.log(payload);
+            self.standings = payload;
+            clearInterval(self.rotateInterval);
+            clearInterval(self.updateInterval);
+            self.updateDom(self.config.animationSpeed);
+        }
+    },
+
+    notificationReceived: function (notification, payload, sender) {
+        var self = this;
+        if(notification === "ALL_MODULES_STARTED"){
+            self.sendNotification("REGISTER_VOICE_MODULE", {
+                mode: "BASEBALL",
+                sentences: [
+                    "SHOW AMERICAN LEAGUE STANDINGS",
+                    "SHOW NATIONAL LEAGUE STANDINGS",
+                    "HIDE STANDINGS"
+                ]
+            });
+        } else if(notification === "VOICE_BASEBALL" && sender.name === "MMM-voice"){
+            self.checkCommands(payload);
+        } else if(notification === "VOICE_MODE_CHANGED" && sender.name === "MMM-voice" && payload.old === "BASEBALL"){
+            self.standings = false;
+            self.scheduleCarousel();
+            self.scheduleUpdate();
+            self.updateDom(self.config.animationSpeed);
+        }
+    },
+
+    checkCommands: function(data){
+        var self = this;
+        if(/(STANDINGS)/g.test(data)){
+            if(/(SHOW)/g.test(data) && /(AMERICAN)/g.test(data)){
+                self.sendSocketNotification('GET_STANDINGS', "AMERICAN");
+            } else if(/(SHOW)/g.test(data) && /(NATIONAL)/g.test(data)) {
+                self.sendSocketNotification('GET_STANDINGS', "NATIONAL");
+            } else if(/(HIDE)/g.test(data)) {
+                self.standings = false;
+                self.scheduleCarousel();
+                self.scheduleUpdate();
+                self.updateDom(self.config.animationSpeed);
+            }
+        }
+    }
  });

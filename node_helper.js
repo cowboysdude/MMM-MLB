@@ -2,7 +2,7 @@
     * Module: MMM-MLB
     *
     * By Cowboysdude
-    * 
+    *
     */
 const NodeHelper = require('node_helper');
 const request = require('request');
@@ -10,89 +10,112 @@ const moment = require('moment');
 const fs = require('fs');
 
 module.exports = NodeHelper.create({
-	
-	start: function() {
-		this.standings = {
+
+    start: function() {
+        var self = this;
+        self.standings = {
             timestamp: null,
             data: null
         };
-       this.path = "modules/MMM-MLB/standings.json";
-        if (fs.existsSync(this.path)) {
-            var temp = JSON.parse(fs.readFileSync(this.path, 'utf8'));
-            if (temp.timestamp === this.getDate()) {
-                this.standings = temp;
+        self.path = "modules/MMM-MLB/standings.json";
+        if (fs.existsSync(self.path)) {
+            var temp = JSON.parse(fs.readFileSync(self.path, 'utf8'));
+            if (temp.timestamp === self.getDate()) {
+                self.standings = temp;
             }
         }
-    	console.log("Starting module: " + this.name);
+        if (fs.existsSync("modules/MMM-MLB/master_scoreboard.json")) {
+            self.debug_results = JSON.parse(fs.readFileSync("modules/MMM-MLB/master_scoreboard.json", "utf8"));
+        }
+        console.log("Starting module: " + self.name);
     },
 
-	getMLB: function() {
-		function z(n) { return ((n < 10) ? "0" : "") + n; }
-		var date = new Date();
-		if (date.getUTCHours() < 15) {
-			date.setUTCDate(date.getUTCDate() - 1);
-		}
-		var url_date = "year_" + date.getUTCFullYear() + "/month_" + z(date.getUTCMonth() + 1) + "/day_" + z(date.getUTCDate());
-    	
+    getMLB: function() {
+        function z(n) { return ((n < 10) ? "0" : "") + n; }
+        var self = this;
+        var date = new Date();
+        if (date.getUTCHours() < 15) {
+            date.setUTCDate(date.getUTCDate() - 1);
+        }
+        var url_date = "year_" + date.getUTCFullYear() + "/month_" + z(date.getUTCMonth() + 1) + "/day_" + z(date.getUTCDate());
+
+        if (!self.config) {
+            return;
+        }
+
+        if (self.debug_results) {
+            self.processResults(self.debug_results.data.games.game);
+            return;
+        }
+
         request({
             url: "http://gd2.mlb.com/components/game/mlb/" + url_date + "/master_scoreboard.json",
             method: 'GET'
         }, (error, response, body) => {
             if (!error && response.statusCode == 200) {
-                var result = JSON.parse(body).data.games;
-                if(this.config.focus_on.length > 0){
-					result.game = result.game.filter((game) => {
-						if(this.config.focus_on.includes(game.home_team_name) || this.config.focus_on.includes(game.away_team_name)){
-							return true;
-						} else {
-							return false;
-						}
-					});
-				}
-                this.sendSocketNotification('MLB_RESULTS', result);
+                self.processResults(JSON.parse(body).data.games.game);
             }
         });
     },
-    
-   GET_STANDINGS: function(url) {
-         request({
-             url: "https://erikberg.com/mlb/standings.json", 
-             method: 'GET', 
-             headers: {
-                 'User-Agent': 'MagicMirror/1.0 ('+this.config.email+')'
-             }
-         }, (error, response, body) => {
-             if (!error && response.statusCode == 200) {
-                 var result = JSON.parse(body).standing;
-                 this.sendSocketNotification('STANDINGS_RESULTS', result);
-                 this.standings.timestamp = this.getDate();
-                 this.standings.data = result;
-                 this.fileWrite();
-             }
-         });
+
+    processResults: function(result) {
+        var self = this;
+        var focus = self.config.focus_on;
+        if (focus.length > 0) {
+            result = result.filter((game) => {
+                return focus.includes(game.home_team_name) || focus.includes(game.away_team_name);
+            });
+            focus.map((team) => {
+                if (!result.some((game) => { return [game.home_team_name, game.away_team_name].includes(team); })) {
+                    result.push({ "status": { "status": "No Game Scheduled" }, "home_team_name": team });
+                }
+            });
+        }
+        self.sendSocketNotification('MLB_RESULTS', result);
     },
-    
-    
+
+    GET_STANDINGS: function(url) {
+        var self = this;
+        request({
+            url: "https://erikberg.com/mlb/standings.json",
+            method: 'GET',
+            headers: {
+                'User-Agent': 'MagicMirror/1.0 ('+self.config.email+')'
+            }
+        }, (error, response, body) => {
+            if (!error && response.statusCode == 200) {
+                var result = JSON.parse(body).standing;
+                self.sendSocketNotification('STANDINGS_RESULTS', result);
+                self.standings.timestamp = self.getDate();
+                self.standings.data = result;
+                self.fileWrite();
+            }
+        });
+    },
+
+
     fileWrite: function() {
-        fs.writeFile(this.path, JSON.stringify(this.standings), function(err) {
+        var self = this;
+        fs.writeFile(self.path, JSON.stringify(self.standings), function(err) {
             if (err) {
                 return console.log(err);
             }
             console.log("The standings file was saved!");
         });
     },
-    
+
     getDate: function() {
         return (new Date()).toLocaleDateString();
     },
-    
+
     socketNotificationReceived: function(notification, payload) {
-    	if(notification === 'CONFIG'){
-			this.config = payload;
-		} else if (notification === 'GET_MLB') {
-    		this.getMLB(payload);
+        var self = this;
+        if (notification === 'CONFIG') {
+            self.config = payload;
+        } else if (notification === 'GET_MLB') {
+            self.getMLB(payload);
         } else if (notification === 'GET_STANDINGS') {
-            this.GET_STANDINGS(payload);
+            self.GET_STANDINGS(payload);
         }
     }
 
