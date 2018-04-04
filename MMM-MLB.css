@@ -12,10 +12,11 @@
   font-size: 18px;
 }
 .MMM-MLB .rhe-header {
+  width: 2.5ex;
   color: #c6d9d0;
   text-align: center;
 }
-.MMM-MLB .rhe {
+.MMM-MLB .rhe-data {
   color: #e4e4e4;
   text-align: center;
 }
@@ -33,13 +34,27 @@
   width: 75px;
   height: 50px;
 }
-.MMM-MLB .center {
-  text-align: center;
-}
 .MMM-MLB .emblem {
   height: 12%;
   width: 12%;
   margin-right: 15px;
+}
+.MMM-MLB .xsdata {
+  color: #c6d9d0;
+  font-size: 15px;
+  line-height: 20px;
+}
+.MMM-MLB .pregame-data {
+  text-align: right;
+  width: 12ex;
+}
+.MMM-MLB .postponed-data {
+  text-align: right;
+  width: 12ex;
+}
+.MMM-MLB .inprogress-data {
+  width: 100px;
+  text-align: center;
 }
 .MMM-MLB .status2 {
 }
