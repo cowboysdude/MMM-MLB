@@ -100,6 +100,16 @@ function getGamePitcher(game, type) {
     return "Unknown";
 }
 
+function getSavePitcher(game) {
+    if (game.hasOwnProperty("save_pitcher")) {
+        var data = game.save_pitcher;
+        if (data.name_display_roster !== "") {
+            return sprintf("{} ({})", data.name_display_roster, data.saves);
+        }
+    }
+    return "";
+}
+
 function makeNoGameWidget(game) {
     var table = document.createElement("table");
 
@@ -282,8 +292,8 @@ function makePostgameWidget(game) {
     cell.classList.add("xsmall", "dimmed", "status2");
     cell.setAttribute("colspan", 4);
     cell.innerHTML = sprintf("W: {} L: {}", getGamePitcher(game, "winning"), getGamePitcher(game, "losing"));
-    if (getGamePitcher(game, "save") !== "Unknown") {
-        cell.innerHTML += "<br/>S: " + getGamePitcher(game, "save");
+    if (getSavePitcher(game) !== "") {
+        cell.innerHTML += "<br/>S: " + getSavePitcher(game);
     }
     row.appendChild(cell);
     table.appendChild(row);
