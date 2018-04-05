@@ -216,6 +216,7 @@ function makeInProgressWidget(game) {
     var row = document.createElement("tr");
     var cell = document.createElement("th");
     cell.classList.add("align-left", "status");
+    cell.setAttribute("colspan", 2);
     if (game.status.status === "In Progress") {
         cell.innerHTML = sprintf("{} {}", game.status.inning_state.substring(0, 3),
             getOrdinal(game.status.inning));
@@ -235,17 +236,19 @@ function makeInProgressWidget(game) {
     // Body
     row = document.createElement("tr");
     row.appendChild(makeTeamCell(game, "away"));
+    row.appendChild(makeStatCell(game, "r", "away"));
     table.appendChild(row);
 
     row = document.createElement("tr");
     row.appendChild(makeTeamCell(game, "home"));
+    row.appendChild(makeStatCell(game, "r", "home"));
     table.appendChild(row);
 
     // Footer
     row = document.createElement("tr");
     cell = document.createElement("td");
     cell.classList.add("xsdata", "status3");
-    cell.setAttribute("colspan", 2);
+    cell.setAttribute("colspan", 3);
     cell.innerHTML = sprintf("P: {} ({}-{}, {}) AB: {} ({}-{}, {})",
         game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era,
         game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg);
