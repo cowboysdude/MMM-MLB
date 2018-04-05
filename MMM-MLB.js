@@ -52,14 +52,14 @@ function makeTeamCell(game, team) {
     cell.classList.add(team + "team");
     cell.innerHTML = sprintf('<img class="logo" src="modules/MMM-MLB/icons/{}.png"> {}', team_name, team_name);
     if (game.hasOwnProperty(team + "_win") && game.hasOwnProperty(team + "_loss")) {
-        cell.innerHTML += sprintf(' <span class="xsmall dimmed">({}-{})</span>', game[team + "_win"], game[team + "_loss"]);
+        cell.innerHTML += sprintf(' <span class="xsdata">({}-{})</span>', game[team + "_win"], game[team + "_loss"]);
     }
     return cell;
 }
 
 function makeStatCell(game, stat, team) {
     var cell = document.createElement("td");
-    cell.classList.add("rhe");
+    cell.classList.add("rhe-data");
     if (game.status.status != "Preview") {
         cell.innerHTML = game.linescore[stat][team] || "0";
     } else {
@@ -146,6 +146,7 @@ function makePregameWidget(game) {
     row.appendChild(makeTeamCell(game, "away"));
 
     cell = document.createElement("td");
+    cell.classList.add("pregame-data");
     cell.setAttribute("rowspan", 2);
     cell.innerHTML = sprintf("{} {} {}", game.time, game.hm_lg_ampm, game.time_zone);
     row.appendChild(cell);
@@ -158,7 +159,7 @@ function makePregameWidget(game) {
     // Footer
     row = document.createElement("tr");
     cell = document.createElement("td");
-    cell.classList.add("xsmall", "dimmed", "status3");
+    cell.classList.add("xsdata", "status3");
     cell.setAttribute("colspan", 2);
     cell.innerHTML = sprintf("{} {}", getProbablePitcher(game, "home"), getProbablePitcher(game, "away"));
     row.appendChild(cell);
@@ -195,6 +196,7 @@ function makePostponedWidget(game) {
     row.appendChild(makeTeamCell(game, "away"));
 
     cell = document.createElement("td");
+    cell.classList.add("postponed-data");
     cell.setAttribute("rowspan", 2);
     cell.innerHTML = "Postponed";
     row.appendChild(cell);
@@ -214,6 +216,7 @@ function makeInProgressWidget(game) {
     var row = document.createElement("tr");
     var cell = document.createElement("th");
     cell.classList.add("align-left", "status");
+    cell.setAttribute("colspan", 2);
     if (game.status.status === "In Progress") {
         cell.innerHTML = sprintf("{} {}", game.status.inning_state.substring(0, 3),
             getOrdinal(game.status.inning));
@@ -223,9 +226,9 @@ function makeInProgressWidget(game) {
     row.appendChild(cell);
 
     cell = document.createElement("td");
-    cell.classList.add("xsmall", "dimmed", "center");
+    cell.classList.add("xsdata", "inprogress-data");
     cell.setAttribute("rowspan", 3);
-    cell.innerHTML = sprintf("<br/>{}<br/>{}-{}, {} out", getRunnersImg(game),
+    cell.innerHTML = sprintf("{}<br/>{}-{}, {} out", getRunnersImg(game),
         game.status.b, game.status.s, game.status.o);
     row.appendChild(cell);
     table.appendChild(row);
@@ -233,17 +236,19 @@ function makeInProgressWidget(game) {
     // Body
     row = document.createElement("tr");
     row.appendChild(makeTeamCell(game, "away"));
+    row.appendChild(makeStatCell(game, "r", "away"));
     table.appendChild(row);
 
     row = document.createElement("tr");
     row.appendChild(makeTeamCell(game, "home"));
+    row.appendChild(makeStatCell(game, "r", "home"));
     table.appendChild(row);
 
     // Footer
     row = document.createElement("tr");
     cell = document.createElement("td");
-    cell.classList.add("xsmall", "dimmed", "status3");
-    cell.setAttribute("colspan", 2);
+    cell.classList.add("xsdata", "status3");
+    cell.setAttribute("colspan", 3);
     cell.innerHTML = sprintf("P: {} ({}-{}, {}) AB: {} ({}-{}, {})",
         game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era,
         game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg);
@@ -289,7 +294,7 @@ function makePostgameWidget(game) {
     // Footer
     row = document.createElement("tr");
     cell = document.createElement("td");
-    cell.classList.add("xsmall", "dimmed", "status2");
+    cell.classList.add("xsdata", "status2");
     cell.setAttribute("colspan", 4);
     cell.innerHTML = sprintf("W: {} L: {}", getGamePitcher(game, "winning"), getGamePitcher(game, "losing"));
     if (getSavePitcher(game) !== "") {
