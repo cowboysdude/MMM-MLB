@@ -91,20 +91,21 @@ function getProbablePitcher(game, team) {
 }
 
 function getGamePitcher(game, type) {
+    var name = "Unknown";
     if (game.hasOwnProperty(type + "_pitcher")) {
         var data = game[type + "_pitcher"];
         if (data.name_display_roster !== "") {
-            return sprintf("{} ({}-{}, {})", data.name_display_roster, data.wins, data.losses, data.era);
+            name = sprintf("{} ({}-{}, {})", data.name_display_roster, data.wins, data.losses, data.era);
         }
     }
-    return "Unknown";
+    return sprintf("{}: {}", type[0].toUpperCase(), name);
 }
 
 function getSavePitcher(game) {
     if (game.hasOwnProperty("save_pitcher")) {
         var data = game.save_pitcher;
         if (data.name_display_roster !== "") {
-            return sprintf("{} ({})", data.name_display_roster, data.saves);
+            return sprintf("S: {} ({})", data.name_display_roster, data.saves);
         }
     }
     return "";
@@ -161,7 +162,8 @@ function makePregameWidget(game) {
     cell = document.createElement("td");
     cell.classList.add("xsdata", "status3");
     cell.setAttribute("colspan", 2);
-    cell.innerHTML = sprintf("{} {}", getProbablePitcher(game, "home"), getProbablePitcher(game, "away"));
+    cell.innerHTML = sprintf('<div class="stat-block">{}</div><div class="stat-block">{}</div>',
+        getProbablePitcher(game, "away"), getProbablePitcher(game, "home"));
     row.appendChild(cell);
     table.appendChild(row);
 
@@ -228,7 +230,7 @@ function makeInProgressWidget(game) {
     cell = document.createElement("td");
     cell.classList.add("xsdata", "inprogress-data");
     cell.setAttribute("rowspan", 3);
-    cell.innerHTML = sprintf("{}<br/>{}-{}, {} out", getRunnersImg(game),
+    cell.innerHTML = sprintf("<div>{}</div><div>{}-{}, {} out</div>", getRunnersImg(game),
         game.status.b, game.status.s, game.status.o);
     row.appendChild(cell);
     table.appendChild(row);
@@ -249,7 +251,7 @@ function makeInProgressWidget(game) {
     cell = document.createElement("td");
     cell.classList.add("xsdata", "status3");
     cell.setAttribute("colspan", 3);
-    cell.innerHTML = sprintf("P: {} ({}-{}, {}) AB: {} ({}-{}, {})",
+    cell.innerHTML = sprintf('<div class="stat-block">P: {} ({}-{}, {})</div><div class="stat-block">AB: {} ({}-{}, {})</div>',
         game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era,
         game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg);
     row.appendChild(cell);
@@ -296,9 +298,10 @@ function makePostgameWidget(game) {
     cell = document.createElement("td");
     cell.classList.add("xsdata", "status2");
     cell.setAttribute("colspan", 4);
-    cell.innerHTML = sprintf("W: {} L: {}", getGamePitcher(game, "winning"), getGamePitcher(game, "losing"));
+    cell.innerHTML = sprintf('<div class="stat-block">{}</div><div class="stat-block">{}</div>',
+        getGamePitcher(game, "winning"), getGamePitcher(game, "losing"));
     if (getSavePitcher(game) !== "") {
-        cell.innerHTML += "<br/>S: " + getSavePitcher(game);
+        cell.innerHTML += sprintf('<div class="stat-block">{}</div>', getSavePitcher(game));
     }
     row.appendChild(cell);
     table.appendChild(row);
