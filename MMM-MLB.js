@@ -211,6 +211,11 @@ function makePostponedWidget(game) {
     return table;
 }
 
+function getGameInning(game) {
+    return sprintf("{} {}", game.status.inning_state.substring(0, 3),
+        getOrdinal(game.status.inning));
+}
+
 function makeInProgressWidget(game) {
     var table = document.createElement("table");
 
@@ -220,8 +225,9 @@ function makeInProgressWidget(game) {
     cell.classList.add("align-left", "status");
     cell.setAttribute("colspan", 2);
     if (game.status.status === "In Progress") {
-        cell.innerHTML = sprintf("{} {}", game.status.inning_state.substring(0, 3),
-            getOrdinal(game.status.inning));
+        cell.innerHTML = getGameInning(game);
+    } else if (game.status.status === "Delayed") {
+        cell.innerHTML = sprintf("{} (Delayed)", getGameInning(game));
     } else {
         cell.innerHTML = game.status.status;
     }
@@ -386,7 +392,7 @@ Module.register("MMM-MLB", {
                     top.appendChild(makePostponedWidget(game));
                 } else if (["Preview", "Pre-Game"].includes(game.status.status)) {
                     top.appendChild(makePregameWidget(game));
-                } else if (["Warmup", "In Progress"].includes(game.status.status)) {
+                } else if (["Warmup", "In Progress", "Delayed"].includes(game.status.status)) {
                     top.appendChild(makeInProgressWidget(game));
                 } else {
                     top.appendChild(makePostgameWidget(game));
