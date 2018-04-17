@@ -176,6 +176,7 @@ function getPostponedReason(game) {
         "DS": "Snow",
         "DI": "Inclement Weather",
         "DR": "Rain",
+        "DV": "Venue",
     };
 
     return (game.status.ind in reason_map) ? reason_map[game.status.ind] : "Postponed";
@@ -189,7 +190,7 @@ function makePostponedWidget(game) {
     var cell = document.createElement("th");
     cell.classList.add("align-left", "status");
     cell.setAttribute("colspan", 2);
-    cell.innerHTML = getPostponedReason(game);
+    cell.innerHTML = "Postponed";
     row.appendChild(cell);
     table.appendChild(row);
 
@@ -200,7 +201,7 @@ function makePostponedWidget(game) {
     cell = document.createElement("td");
     cell.classList.add("postponed-data");
     cell.setAttribute("rowspan", 2);
-    cell.innerHTML = "Postponed";
+    cell.innerHTML = getPostponedReason(game);
     row.appendChild(cell);
     table.appendChild(row);
 
