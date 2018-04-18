@@ -57,11 +57,6 @@ module.exports = NodeHelper.create({
             result = result.filter((game) => {
                 return focus.includes(game.home_team_name) || focus.includes(game.away_team_name);
             });
-            focus.map((team) => {
-                if (!result.some((game) => { return [game.home_team_name, game.away_team_name].includes(team); })) {
-                    result.push({ "status": { "status": "No Game Scheduled" }, "home_team_name": team });
-                }
-            });
         }
         self.sendSocketNotification('MLB_RESULTS', result);
     },

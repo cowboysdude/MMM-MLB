@@ -393,9 +393,7 @@ Module.register("MMM-MLB", {
                 var top = document.createElement("div");
                 top.classList = "small bright";
 
-                if (game.status.status === "No Game Scheduled") {
-                    top.appendChild(makeNoGameWidget(game));
-                } else if (game.status.status === "Postponed") {
+                if (game.status.status === "Postponed") {
                     top.appendChild(makePostponedWidget(game));
                 } else if (["Preview", "Pre-Game"].includes(game.status.status)) {
                     top.appendChild(makePregameWidget(game));
