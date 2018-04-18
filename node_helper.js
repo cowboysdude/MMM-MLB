@@ -24,9 +24,6 @@ module.exports = NodeHelper.create({
                 self.standings = temp;
             }
         }
-        if (fs.existsSync("modules/MMM-MLB/master_scoreboard.json")) {
-            self.debug_results = JSON.parse(fs.readFileSync("modules/MMM-MLB/master_scoreboard.json", "utf8"));
-        }
         console.log("Starting module: " + self.name);
     },
 
@@ -40,11 +37,6 @@ module.exports = NodeHelper.create({
         var url_date = "year_" + date.getUTCFullYear() + "/month_" + z(date.getUTCMonth() + 1) + "/day_" + z(date.getUTCDate());
 
         if (!self.config) {
-            return;
-        }
-
-        if (self.debug_results) {
-            self.processResults(self.debug_results.data.games.game);
             return;
         }
 
