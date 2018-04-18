@@ -149,7 +149,11 @@ function makePregameWidget(game) {
     cell = document.createElement("td");
     cell.classList.add("pregame-data");
     cell.setAttribute("rowspan", 2);
-    cell.innerHTML = sprintf("{} {} {}", game.time, game.hm_lg_ampm, game.time_zone);
+    if (game.time.includes(":")) {
+        cell.innerHTML = sprintf("{} {} {}", game.time, game.hm_lg_ampm, game.time_zone);
+    } else {
+        cell.innerHTML = game.time;
+    }
     row.appendChild(cell);
     table.appendChild(row);
 
@@ -283,6 +287,9 @@ function makePostgameWidget(game) {
     cell.innerHTML = game.status.status;
     if (game.status.inning !== "9") {
         cell.innerHTML += "/" + game.status.inning;
+    }
+    if (game.game_nbr > 1) {
+        cell.innerHTML += sprintf(" - Game {}", game.game_nbr);
     }
     row.appendChild(cell);
 
