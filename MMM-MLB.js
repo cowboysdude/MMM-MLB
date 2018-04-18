@@ -229,6 +229,8 @@ function makeInProgressWidget(game) {
         cell.innerHTML = getGameInning(game);
     } else if (game.status.status === "Delayed") {
         cell.innerHTML = sprintf("{} (Delayed)", getGameInning(game));
+    } else if (game.status.status === "Manager Challenge") {
+        cell.innerHTML = sprintf("{} (Challenge)", getGameInning(game));
     } else {
         cell.innerHTML = game.status.status;
     }
@@ -258,9 +260,13 @@ function makeInProgressWidget(game) {
     cell = document.createElement("td");
     cell.classList.add("xsdata", "status3");
     cell.setAttribute("colspan", 3);
-    cell.innerHTML = sprintf('<div class="stat-block">P: {} ({}-{}, {})</div><div class="stat-block">AB: {} ({}-{}, {})</div>',
-        game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era,
-        game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg);
+    if (game.status.status === "Manager Challenge") {
+        cell.innerHTML = sprintf("{} challenge - {}", game.status.challenge_team_brief, game.status.reason);
+    } else {
+        cell.innerHTML = sprintf('<div class="stat-block">P: {} ({}-{}, {})</div><div class="stat-block">AB: {} ({}-{}, {})</div>',
+            game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era,
+            game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg);
+    }
     row.appendChild(cell);
     table.appendChild(row);
 
