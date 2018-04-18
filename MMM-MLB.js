@@ -235,6 +235,8 @@ function makeInProgressWidget(game) {
         cell.innerHTML = sprintf("{} (Delayed)", getGameInning(game));
     } else if (game.status.status === "Manager Challenge") {
         cell.innerHTML = sprintf("{} (Challenge)", getGameInning(game));
+    } else if (game.status.status === "Review") {
+        cell.innerHTML = sprintf("{} (Review)", getGameInning(game));
     } else {
         cell.innerHTML = game.status.status;
     }
@@ -266,6 +268,8 @@ function makeInProgressWidget(game) {
     cell.setAttribute("colspan", 3);
     if (game.status.status === "Manager Challenge") {
         cell.innerHTML = sprintf("{} challenge - {}", game.status.challenge_team_brief, game.status.reason);
+    } else if (game.status.status === "Review") {
+        cell.innerHTML = sprintf("Umpire review - {}", game.status.reason);
     } else {
         cell.innerHTML = sprintf('<div class="stat-block">P: {} ({}-{}, {})</div><div class="stat-block">AB: {} ({}-{}, {})</div>',
             game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era,
