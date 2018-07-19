@@ -45,7 +45,7 @@ module.exports = NodeHelper.create({
             method: 'GET'
         }, (error, response, body) => {
             if (!error && response.statusCode == 200) {
-                self.processResults(JSON.parse(body).data.games.game);
+                self.processResults(JSON.parse(body).data.games.game || []);
             }
         });
     },
