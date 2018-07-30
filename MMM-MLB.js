@@ -406,7 +406,7 @@ Module.register("MMM-MLB", {
 
                 if (game.status.status === "Postponed") {
                     top.appendChild(makePostponedWidget(game));
-                } else if (["Preview", "Pre-Game"].includes(game.status.status)) {
+                } else if (["Preview", "Pre-Game", "Delayed Start"].includes(game.status.status)) {
                     top.appendChild(makePregameWidget(game));
                 } else if (["Game Over", "Final"].includes(game.status.status)) {
                     top.appendChild(makePostgameWidget(game));
