@@ -546,32 +546,27 @@ Module.register("MMM-MLB", {
             self.sendNotification("REGISTER_VOICE_MODULE", {
                 mode: "BASEBALL",
                 sentences: [
-                    "SHOW AMERICAN LEAGUE STANDINGS",
-                    "SHOW NATIONAL LEAGUE STANDINGS",
+                    "SHOW STANDINGS",
                     "HIDE STANDINGS"
                 ]
             });
         } else if(notification === "VOICE_BASEBALL" && sender.name === "MMM-voice"){
             self.checkCommands(payload);
         } else if(notification === "VOICE_MODE_CHANGED" && sender.name === "MMM-voice" && payload.old === "BASEBALL"){
-            self.standings = false;
-            self.scheduleCarousel();
-            self.updateDom(self.config.animationSpeed);
+            self.checkCommands("HIDE STANDINGS");
         }
     },
 
     checkCommands: function(data){
         var self = this;
         if(/(STANDINGS)/g.test(data)){
-            if(/(SHOW)/g.test(data) && /(AMERICAN)/g.test(data)){
-                self.sendSocketNotification('GET_STANDINGS', "AMERICAN");
-            } else if(/(SHOW)/g.test(data) && /(NATIONAL)/g.test(data)) {
-                self.sendSocketNotification('GET_STANDINGS', "NATIONAL");
+            if(/(SHOW)/g.test(data)) {
+                self.config.mode = "standings";
             } else if(/(HIDE)/g.test(data)) {
-                self.standings = false;
-                self.scheduleCarousel();
-                self.updateDom(self.config.animationSpeed);
+                self.config.mode = "scoreboard";
             }
+            self.updateDom(self.config.animationSpeed);
+            self.getData();
         }
     }
  });
