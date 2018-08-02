@@ -41,7 +41,7 @@ The following properties can be configured:
 |---|---|---|
 |`updateInterval`|`3*60000`|How often (in ms) to update data from the server.|
 |`animationSpeed`|`10`|How long (in ms) animate transitions.|
-|`initialLoadDelay`|`2500`How long (in ms) to wait before initial data load.|
+|`initialLoadDelay`|`2500`|How long (in ms) to wait before initial data load.|
 |`maxWidth`|`"400px"`|Maximum width (in css units) of the widget.|
 |`rotateInterval`|`5 * 1000`|How often (in ms) to rotate between scores/divisions.|
 |`header`|`true`|Whether or not to display a header showing the mode and date at the top of the widget.|
@@ -52,14 +52,13 @@ The following properties can be configured:
 ## Custom CSS
 Custom.css colors you can configure:
 
-  .MMM-MLB .header
-  .MMM-MLB .status
-  .MMM-MLB .r
-  .MMM-MLB .h
-  .MMM-MLB .e
-  .MMM-MLB .hometeam
-  .MMM-MLB .awayteam
-  .MMM-MLB .status2
-  .MMM-MLB .status3
-  .MMM-MLB .status4
-
+    .MMM-MLB .header
+    .MMM-MLB .status
+    .MMM-MLB .r
+    .MMM-MLB .h
+    .MMM-MLB .e
+    .MMM-MLB .hometeam
+    .MMM-MLB .awayteam
+    .MMM-MLB .status2
+    .MMM-MLB .status3
+    .MMM-MLB .status4
