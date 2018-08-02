@@ -333,6 +333,57 @@ function makePostgameWidget(game) {
     return table;
 }
 
+function makeStandingsTeamCell(team) {
+    var cell = document.createElement("td");
+    cell.innerHTML = sprintf('<img class="logo" src="modules/MMM-MLB/icons/{}.png"> {}', team.name, team.name);
+    return cell;
+}
+
+function makeStandingsStatCell(team, stat) {
+    var cell = document.createElement("td");
+    cell.classList.add("rhe-data");
+    cell.innerHTML = team[stat];
+    return cell;
+}
+
+function makeStandingsRow(team) {
+    var row = document.createElement("tr");
+
+    row.appendChild(makeStandingsTeamCell(team));
+    ["W", "L", "GB", "L10", "STRK"].map(function(column) {
+        row.appendChild(makeStandingsStatCell(team, column));
+    });
+
+    return row;
+}
+
+function makeStandingsWidget(division) {
+    var table = document.createElement("table");
+
+    // Header
+    var row = document.createElement("tr");
+    var cell = document.createElement("th");
+    cell.classList.add("align-left", "status");
+    cell.innerHTML = division.name;
+    row.appendChild(cell);
+
+    ["W", "L", "GB", "L10", "STRK"].map(function(column) {
+        cell = document.createElement("th");
+        cell.classList.add("rhe-header");
+        cell.innerHTML = column;
+        row.appendChild(cell);
+    });
+
+    table.appendChild(row);
+
+    // Body
+    for (var i in division.teams) {
+        table.appendChild(makeStandingsRow(division.teams[i]));
+    }
+
+    return table;
+}
+
 Module.register("MMM-MLB", {
 
     // Module config defaults.
@@ -340,13 +391,12 @@ Module.register("MMM-MLB", {
         updateInterval: 3*60000, // every 3 minutes
         animationSpeed: 10,
         initialLoadDelay: 2500, // 2.5 seconds delay
-        retryDelay: 1500,
         maxWidth: "400px",
-        fadeSpeed: 4,
         rotateInterval: 5 * 1000,
         header: true,
         logo: false,
         focus_on: [],
+        mode: "scoreboard",
     },
 
     // Define required scripts.
@@ -362,19 +412,15 @@ Module.register("MMM-MLB", {
     start: function() {
         var self = this;
         Log.info("Starting module: " + self.name);
-        self.sendSocketNotification('CONFIG', self.config);
         // Set locale.
         self.week = "";
         self.scoreboard = [];
+        self.standings = [];
         self.activeItem = 0;
         self.rotateInterval = null;
         self.updateInterval = null;
         self.scheduleUpdate();
-        self.standings = false;
-        //setTimeout(()=>{self.sendSocketNotification('GET_STANDINGS', "AMERICAN")}, 5000);
     },
-
-//no longer popups up
 
     getDom: function() {
         var self = this;
@@ -383,17 +429,29 @@ Module.register("MMM-MLB", {
         wrapper.style.maxWidth = self.config.maxWidth;
 
         if (self.config.header === true) {
+            var html = (self.config.mode === "scoreboard") ? "MLB Scores " : "MLB Standings ";
+            html += moment().format('MM/DD/YYYY');
+            if (self.config.logo === true) {
+                html = "<img class='emblem' src='modules/MMM-MLB/icons/mlb.png'> " + html;
+            }
+
             var header = document.createElement("header");
             header.classList.add("header");
-            if (self.config.logo === true) {
-                header.innerHTML = "<img class='emblem' src='modules/MMM-MLB/icons/mlb.png'>    MLB Scores     " + moment().format('MM/DD/YYYY');
-            } else {
-                header.innerHTML = " MLB Scores     " + moment().format('MM/DD/YYYY');
-            }
+            header.innerHTML = html;
             wrapper.appendChild(header);
         }
 
-        if (self.standings === false) {
+        if (self.config.mode === "scoreboard") {
+            if (self.config.header === true) {
+                var header = document.createElement("header");
+                header.classList.add("header");
+                if (self.config.logo === true) {
+                    header.innerHTML = "<img class='emblem' src='modules/MMM-MLB/icons/mlb.png'>    MLB Scores     " + moment().format('MM/DD/YYYY');
+                } else {
+                    header.innerHTML = " MLB Scores     " + moment().format('MM/DD/YYYY');
+                }
+                wrapper.appendChild(header);
+            }
 
             if (self.scoreboard.length > 0) {
                 if (self.activeItem >= self.scoreboard.length) {
@@ -417,58 +475,23 @@ Module.register("MMM-MLB", {
                 wrapper.appendChild(top);
             }
         } else {
-            //ok we have the wrapper already no need to overwrite it
-            var standingsTable = document.createElement("table");
+            if (self.standings.length > 0) {
+                if (self.activeItem >= self.standings.length) {
+                    self.activeItem = 0;
+                }
+                var division = self.standings[self.activeItem];
 
-            var headerRow = document.createElement("tr");
-            headerRow.classList.add("small", "bright");
+                var top = document.createElement("div");
+                top.classList = "small bright";
 
-            var teamLabel = document.createElement("th");
-            teamLabel.innerHTML = "Team";
-            headerRow.appendChild(teamLabel);
+                top.appendChild(makeStandingsWidget(division));
 
-            var winLabel = document.createElement("th");
-            winLabel.innerHTML = "W";
-            headerRow.appendChild(winLabel);
-
-            var lossLabel = document.createElement("th");
-            lossLabel.innerHTML = "L";
-            headerRow.appendChild(lossLabel);
-
-            standingsTable.appendChild(headerRow);
-
-            for(var i = 0; i < self.standings.length; i++) {
-                var standings = self.standings[i];
-
-                var dataRow = document.createElement("tr");
-                var teamsShowColumn = document.createElement("td");
-                teamsShowColumn.innerHTML = standings.team_id + " " + standings.rank;
-                dataRow.appendChild(teamsShowColumn);
-
-
-                var winsShowColumn = document.createElement("td");
-                winsShowColumn.innerHTML = standings.won; //right now..
-                dataRow.appendChild(winsShowColumn);
-
-
-                var lossShowColumn = document.createElement("td");
-                lossShowColumn.innerHTML = standings.lost; //right now..
-                dataRow.appendChild(lossShowColumn);
-
-                standingsTable.appendChild(dataRow);
+                wrapper.appendChild(top);
             }
-            wrapper.appendChild(standingsTable);
         }
 
         return wrapper;
      },
-
-
-    processMLB: function(scoreboard) {
-        var self = this;
-        self.scoreboard = scoreboard;
-        self.loaded = true;
-    },
 
 
     scheduleCarousel: function() {
@@ -484,34 +507,35 @@ Module.register("MMM-MLB", {
     scheduleUpdate: function() {
         var self = this;
         self.updateInterval = setInterval(() => {
-            self.getMLB();
+            self.getData();
         }, self.config.updateInterval);
-        self.getMLB(self.config.initialLoadDelay);
+        self.getData();
     },
 
 
-    getMLB: function() {
-        this.sendSocketNotification('GET_MLB');
+    getData: function() {
+        var self = this;
+        if (self.config.mode === "standings") {
+            self.sendSocketNotification('GET_MLB_STANDINGS', self.config);
+        } else {
+            self.sendSocketNotification('GET_MLB_SCOREBOARD', self.config);
+        }
     },
 
     socketNotificationReceived: function(notification, payload) {
         var self = this;
         console.log(notification);
-        if (notification === 'MLB_RESULTS') {
-            self.processMLB(payload);
+        if (notification === 'MLB_SCOREBOARD' && self.config.mode === "scoreboard") {
+            self.scoreboard = payload;
             if (self.rotateInterval == null) {
                 self.scheduleCarousel();
             }
-            if (self.updateInterval == null) {
-                self.scheduleUpdate();
-            }
             self.updateDom(self.config.animationSpeed);
-        } else if(notification === 'STANDINGS_RESULTS') {
-            console.log(notification);
-            console.log(payload);
+        } else if (notification === 'MLB_STANDINGS' && self.config.mode === "standings") {
             self.standings = payload;
-            clearInterval(self.rotateInterval);
-            clearInterval(self.updateInterval);
+            if (self.rotateInterval == null) {
+                self.scheduleCarousel();
+            }
             self.updateDom(self.config.animationSpeed);
         }
     },
@@ -532,7 +556,6 @@ Module.register("MMM-MLB", {
         } else if(notification === "VOICE_MODE_CHANGED" && sender.name === "MMM-voice" && payload.old === "BASEBALL"){
             self.standings = false;
             self.scheduleCarousel();
-            self.scheduleUpdate();
             self.updateDom(self.config.animationSpeed);
         }
     },
@@ -547,7 +570,6 @@ Module.register("MMM-MLB", {
             } else if(/(HIDE)/g.test(data)) {
                 self.standings = false;
                 self.scheduleCarousel();
-                self.scheduleUpdate();
                 self.updateDom(self.config.animationSpeed);
             }
         }
