@@ -13,17 +13,6 @@ module.exports = NodeHelper.create({
 
     start: function() {
         var self = this;
-        self.standings = {
-            timestamp: null,
-            data: null
-        };
-        self.path = "modules/MMM-MLB/standings.json";
-        if (fs.existsSync(self.path)) {
-            var temp = JSON.parse(fs.readFileSync(self.path, 'utf8'));
-            if (temp.timestamp === self.getDate()) {
-                self.standings = temp;
-            }
-        }
         console.log("Starting module: " + self.name);
     },
 
@@ -110,14 +99,88 @@ module.exports = NodeHelper.create({
         return result;
     },
 
+    processWildcard: function(league, standings) {
+        var mapped_names = {
+            "Diamondbacks": "D-backs",
+        };
+        var result = {
+            name: league + " Wildcard",
+            teams: []
+        };
+
+        for (var i in standings) {
+            var team = standings[i];
+
+            if (team.conference != league) {
+                continue;
+            }
+
+            result.teams.push({
+                "name": mapped_names[team.last_name] || team.last_name,
+                "rank": team.rank,
+                "W": team.won,
+                "L": team.lost,
+                "PCT": team.win_percentage,
+                "GB": (team.games_back > 0) ? team.games_back : "-",
+                "L10": team.last_ten,
+                "STRK": (team.streak_total > 0) ? (team.streak_type.toUpperCase()[0] + team.streak_total) : "-",
+            });
+        }
+
+        result.teams.sort(function(a, b) {
+            if ((a.rank === 1) != (b.rank === 1)) {
+                return (b.rank === 1) - (a.rank === 1);
+            }
+
+            var awindiff = a.W - a.L;
+            var bwindiff = b.W - b.L;
+            if (awindiff !== bwindiff) {
+                return bwindiff - awindiff;
+            }
+
+            var awinpct = a.W / (a.W + a.L);
+            var bwinpct = b.W / (b.W + b.L);
+            return bwinpct - awinpct;
+        });
+
+        var wcwindiff = null;
+        for (var i = 0; i < result.teams.length; ++i) {
+            var team = result.teams[i];
+
+            if (team.rank === 1) {
+                continue;
+            }
+
+            if (wcwindiff === null) {
+                var wc2 = result.teams[i + 1];
+                wcwindiff = (wc2.W - wc2.L);
+            }
+
+            team.GB = (wcwindiff - (team.W - team.L)) * 0.5;
+            if (team.GB === 0) {
+                team.GB = "-";
+            } else if (team.GB < 0) {
+                team.GB = "+" + -team.GB;
+            }
+        }
+
+        return result;
+    },
+
     processStandings: function(config, standings) {
         var self = this;
         var result = [];
+        // Include wildcard stats starting in September
+        var include_wc = ((new Date()).getMonth() >= 8);
 
         ["AL", "NL"].map(function(league) {
             ["E", "C", "W"].map(function(division) {
                 result.push(self.processDivision(league, division, standings));
             });
+
+            if (include_wc) {
+                result.push(self.processWildcard(league, standings));
+            }
         });
 
         var focus = config.focus_on;
@@ -135,17 +198,6 @@ module.exports = NodeHelper.create({
         self.sendSocketNotification('MLB_STANDINGS', result);
     },
 
-
-    fileWrite: function() {
-        var self = this;
-        fs.writeFile(self.path, JSON.stringify(self.standings), function(err) {
-            if (err) {
-                return console.log(err);
-            }
-            console.log("The standings file was saved!");
-        });
-    },
-
     getDate: function() {
         return (new Date()).toLocaleDateString();
     },
@@ -158,5 +210,4 @@ module.exports = NodeHelper.create({
             self.getStandings(payload);
         }
     }
-
 });
