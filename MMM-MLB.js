@@ -217,8 +217,9 @@ function makePostponedWidget(game) {
 }
 
 function getGameInning(game) {
-    return sprintf("{} {}", game.status.inning_state.substring(0, 3),
-        getOrdinal(game.status.inning));
+    var state = game.status.inning_state.substring(0, 3);
+    var inning = game.status.inning - ((state === "End") ? 1 : 0);
+    return sprintf("{} {}", state, getOrdinal(inning));
 }
 
 function makeInProgressWidget(game) {
