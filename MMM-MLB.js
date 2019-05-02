@@ -179,6 +179,7 @@ function getPostponedReason(game) {
         "DC": "Cold",
         "DS": "Snow",
         "DI": "Inclement Weather",
+        "PI": "Inclement Weather",
         "DR": "Rain",
         "DV": "Venue",
     };
@@ -194,7 +195,7 @@ function makePostponedWidget(game) {
     var cell = document.createElement("th");
     cell.classList.add("align-left", "status");
     cell.setAttribute("colspan", 2);
-    cell.innerHTML = "Postponed";
+    cell.innerHTML = game.status.status;
     row.appendChild(cell);
     table.appendChild(row);
 
@@ -463,7 +464,7 @@ Module.register("MMM-MLB", {
                 var top = document.createElement("div");
                 top.classList = "small bright";
 
-                if (game.status.status === "Postponed") {
+                if (game.status.status === "Postponed" || game.status.status.startsWith("Delayed Start")) {
                     top.appendChild(makePostponedWidget(game));
                 } else if (["Preview", "Pre-Game", "Delayed Start"].includes(game.status.status)) {
                     top.appendChild(makePregameWidget(game));
