@@ -30,19 +30,26 @@ module.exports = NodeHelper.create({
             method: 'GET'
         }, (error, response, body) => {
             if (!error && response.statusCode == 200) {
-                self.processScoreboard(config, JSON.parse(body).data.games.game || []);
+                self.processScoreboard(config, date, body);
             }
         });
     },
 
-    processScoreboard: function(config, result) {
+    processScoreboard: function(config, date, body) {
+        function z(n) { return ((n < 10) ? "0" : "") + n; }
         var self = this;
         var focus = config.focus_on;
+        var result = {
+            date: z(date.getUTCMonth() + 1) + "/" + z(date.getUTCDate()) + "/" + date.getUTCFullYear(),
+            scores: JSON.parse(body).data.games.game || [],
+        };
+
         if (focus.length > 0) {
-            result = result.filter((game) => {
+            result.scores = result.scores.filter((game) => {
                 return focus.includes(game.home_team_name) || focus.includes(game.away_team_name);
             });
         }
+
         self.sendSocketNotification('MLB_SCOREBOARD', result);
     },
 

@@ -7,6 +7,17 @@
 
 "use strict";
 
+function el(tag, options) {
+    var result = document.createElement(tag);
+
+    options = options || {};
+    for (var key in options) {
+      result[key] = options[key];
+    }
+
+    return result;
+}
+
 function sprintf(fmt) {
     var parts = fmt.split("{}");
     var message = parts[0];
@@ -34,6 +45,13 @@ function getOrdinal(i) {
     return i + "th";
 }
 
+function getIcon(name, className) {
+    return el("img", {
+        className: className,
+        src: sprintf("modules/MMM-MLB/icons/{}.png", name),
+    });
+}
+
 function getRunnersImg(game) {
     var runners = "runners"
 
@@ -43,29 +61,30 @@ function getRunnersImg(game) {
       }
     }
 
-    return sprintf('<img class="runners" src="modules/MMM-MLB/icons/{}.png">', runners);
+    return getIcon(runners, "runners");
 }
 
 function makeTeamCell(game, team) {
-    var cell = document.createElement("td");
+    var cell = el("td", { className: team + "team" });
     var team_name = game[team + "_team_name"];
-    cell.classList.add(team + "team");
-    cell.innerHTML = sprintf('<img class="logo" src="modules/MMM-MLB/icons/{}.png"> {}', team_name, team_name);
+    cell.appendChild(getIcon(team_name, "logo"));
+    cell.appendChild(document.createTextNode(" " + team_name + " "));
     if (game.hasOwnProperty(team + "_win") && game.hasOwnProperty(team + "_loss")) {
-        cell.innerHTML += sprintf(' <span class="xsdata">({}-{})</span>', game[team + "_win"], game[team + "_loss"]);
+        cell.appendChild(el("span", {
+            className: "xsdata",
+            innerText: sprintf("({}-{})", game[team + "_win"], game[team + "_loss"]),
+        }));
     }
     return cell;
 }
 
 function makeStatCell(game, stat, team) {
-    var cell = document.createElement("td");
-    cell.classList.add("rhe-data");
+    var text = "0";
     if (game.status.status != "Preview") {
-        cell.innerHTML = game.linescore[stat][team] || "0";
-    } else {
-        cell.innerHTML = "0";
+        text = game.linescore[stat][team] || "0";
     }
-    return cell;
+
+    return el("td", { className: "rhe-data", innerText: text });
 }
 
 function makeStatRow(game, team) {
@@ -116,10 +135,7 @@ function makeNoGameWidget(game) {
 
     // Header
     var row = document.createElement("tr");
-    var cell = document.createElement("th");
-    cell.classList.add("align-left", "status");
-    cell.innerHTML = game.status.status;
-    row.appendChild(cell);
+    row.appendChild(el("th", { className: "align-left status", innerText: game.status.status }));
     table.appendChild(row);
 
     // Body
@@ -130,31 +146,26 @@ function makeNoGameWidget(game) {
     return table;
 }
 
+function getGameTime(game) {
+    if (game.time.includes(":")) {
+        return sprintf("{} {} {}", game.time, game.hm_lg_ampm, game.time_zone);
+    } else {
+        return game.time;
+    }
+}
+
 function makePregameWidget(game) {
     var table = document.createElement("table");
 
     // Header
     var row = document.createElement("tr");
-    var cell = document.createElement("th");
-    cell.classList.add("align-left", "status");
-    cell.setAttribute("colspan", 2);
-    cell.innerHTML = game.status.status;
-    row.appendChild(cell);
+    row.appendChild(el("th", { className: "align-left status", colSpan: "2", innerText: game.status.status }));
     table.appendChild(row);
 
     // Body
     row = document.createElement("tr");
     row.appendChild(makeTeamCell(game, "away"));
-
-    cell = document.createElement("td");
-    cell.classList.add("pregame-data");
-    cell.setAttribute("rowspan", 2);
-    if (game.time.includes(":")) {
-        cell.innerHTML = sprintf("{} {} {}", game.time, game.hm_lg_ampm, game.time_zone);
-    } else {
-        cell.innerHTML = game.time;
-    }
-    row.appendChild(cell);
+    row.appendChild(el("td", { className: "pregame-data", rowSpan: "2", innerText: getGameTime(game) }));
     table.appendChild(row);
 
     row = document.createElement("tr");
@@ -163,11 +174,9 @@ function makePregameWidget(game) {
 
     // Footer
     row = document.createElement("tr");
-    cell = document.createElement("td");
-    cell.classList.add("xsdata", "status3");
-    cell.setAttribute("colspan", 2);
-    cell.innerHTML = sprintf('<div class="stat-block">{}</div><div class="stat-block">{}</div>',
-        getProbablePitcher(game, "away"), getProbablePitcher(game, "home"));
+    var cell = el("td", { className: "xsdata status3", colSpan: "2" });
+    cell.appendChild(el("div", { className: "stat-block", innerText: getProbablePitcher(game, "away") }));
+    cell.appendChild(el("div", { className: "stat-block", innerText: getProbablePitcher(game, "home") }));
     row.appendChild(cell);
     table.appendChild(row);
 
@@ -192,22 +201,13 @@ function makePostponedWidget(game) {
 
     // Header
     var row = document.createElement("tr");
-    var cell = document.createElement("th");
-    cell.classList.add("align-left", "status");
-    cell.setAttribute("colspan", 2);
-    cell.innerHTML = game.status.status;
-    row.appendChild(cell);
+    row.appendChild(el("th", { className: "align-left status", colSpan: "2", innerText: game.status.status }));
     table.appendChild(row);
 
     // Body
     row = document.createElement("tr");
     row.appendChild(makeTeamCell(game, "away"));
-
-    cell = document.createElement("td");
-    cell.classList.add("postponed-data");
-    cell.setAttribute("rowspan", 2);
-    cell.innerHTML = getPostponedReason(game);
-    row.appendChild(cell);
+    row.appendChild(el("td", { className: "postponed-data", rowSpan: "2", innerText: getPostponedReason(game) }));
     table.appendChild(row);
 
     row = document.createElement("tr");
@@ -223,32 +223,30 @@ function getGameInning(game) {
     return sprintf("{} {}", state, getOrdinal(inning));
 }
 
+function getInProgressStatus(game) {
+    if (game.status.status === "In Progress") {
+        return getGameInning(game);
+    } else if (game.status.status === "Delayed") {
+        return sprintf("{} (Delayed)", getGameInning(game));
+    } else if (game.status.status === "Manager Challenge") {
+        return sprintf("{} (Challenge)", getGameInning(game));
+    } else if (game.status.status === "Review") {
+        return sprintf("{} (Review)", getGameInning(game));
+    } else {
+        return game.status.status;
+    }
+}
+
 function makeInProgressWidget(game) {
     var table = document.createElement("table");
 
     // Header
     var row = document.createElement("tr");
-    var cell = document.createElement("th");
-    cell.classList.add("align-left", "status");
-    cell.setAttribute("colspan", 2);
-    if (game.status.status === "In Progress") {
-        cell.innerHTML = getGameInning(game);
-    } else if (game.status.status === "Delayed") {
-        cell.innerHTML = sprintf("{} (Delayed)", getGameInning(game));
-    } else if (game.status.status === "Manager Challenge") {
-        cell.innerHTML = sprintf("{} (Challenge)", getGameInning(game));
-    } else if (game.status.status === "Review") {
-        cell.innerHTML = sprintf("{} (Review)", getGameInning(game));
-    } else {
-        cell.innerHTML = game.status.status;
-    }
-    row.appendChild(cell);
+    row.appendChild(el("th", { className: "align-left status", colSpan: "2", innerText: getInProgressStatus(game) }));
 
-    cell = document.createElement("td");
-    cell.classList.add("xsdata", "inprogress-data");
-    cell.setAttribute("rowspan", 3);
-    cell.innerHTML = sprintf("<div>{}</div><div>{}-{}, {} out</div>", getRunnersImg(game),
-        game.status.b, game.status.s, game.status.o);
+    var cell = el("td", { className: "xsdata inprogress-data", rowSpan: "3" });
+    cell.appendChild(el("div").appendChild(getRunnersImg(game)).parentElement);
+    cell.appendChild(el("div", { innerText: sprintf("{}-{}, {} out", game.status.b, game.status.s, game.status.o) }));
     row.appendChild(cell);
     table.appendChild(row);
 
@@ -265,17 +263,20 @@ function makeInProgressWidget(game) {
 
     // Footer
     row = document.createElement("tr");
-    cell = document.createElement("td");
-    cell.classList.add("xsdata", "status3");
-    cell.setAttribute("colspan", 3);
+    cell = el("td", { className: "xsdata status3", colSpan: "3" });
     if (game.status.status === "Manager Challenge") {
-        cell.innerHTML = sprintf("{} challenge - {}", game.status.challenge_team_brief, game.status.reason);
+        cell.innerText = sprintf("{} challenge - {}", game.status.challenge_team_brief, game.status.reason);
     } else if (game.status.status === "Review") {
-        cell.innerHTML = sprintf("Umpire review - {}", game.status.reason);
+        cell.innerText = sprintf("Umpire review - {}", game.status.reason);
     } else {
-        cell.innerHTML = sprintf('<div class="stat-block">P: {} ({}-{}, {})</div><div class="stat-block">AB: {} ({}-{}, {})</div>',
-            game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era,
-            game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg);
+        cell.appendChild(el("div", {
+            className: "stat-block",
+            innerText: sprintf("P: {} ({}-{}, {})", game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era),
+        }));
+        cell.appendChild(el("div", {
+            className: "stat-block",
+            innerText: sprintf("AB: {} ({}-{}, {})", game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg),
+        }));
     }
     row.appendChild(cell);
     table.appendChild(row);
@@ -283,36 +284,29 @@ function makeInProgressWidget(game) {
     return table;
 }
 
+function getPostgameStatus(game) {
+    var text = game.status.status;
+
+    if (game.status.inning !== "9") {
+        text += "/" + game.status.inning;
+    }
+
+    if (game.game_nbr > 1) {
+        text += sprintf(" - Game {}", game.game_nbr);
+    }
+
+    return text;
+}
+
 function makePostgameWidget(game) {
     var table = document.createElement("table");
 
     // Header
     var row = document.createElement("tr");
-    var cell = document.createElement("th");
-    cell.classList.add("align-left", "status");
-    cell.innerHTML = game.status.status;
-    if (game.status.inning !== "9") {
-        cell.innerHTML += "/" + game.status.inning;
-    }
-    if (game.game_nbr > 1) {
-        cell.innerHTML += sprintf(" - Game {}", game.game_nbr);
-    }
-    row.appendChild(cell);
-
-    cell = document.createElement("th");
-    cell.classList.add("rhe-header");
-    cell.innerHTML = "R";
-    row.appendChild(cell);
-
-    cell = document.createElement("th");
-    cell.classList.add("rhe-header");
-    cell.innerHTML = "H";
-    row.appendChild(cell);
-
-    cell = document.createElement("th");
-    cell.classList.add("rhe-header");
-    cell.innerHTML = "E";
-    row.appendChild(cell);
+    row.appendChild(el("th", { className: "align-left status", innerText: getPostgameStatus(game) }));
+    row.appendChild(el("th", { className: "rhe-header", innerText: "R" }));
+    row.appendChild(el("th", { className: "rhe-header", innerText: "H" }));
+    row.appendChild(el("th", { className: "rhe-header", innerText: "E" }));
     table.appendChild(row);
 
     // Body
@@ -321,13 +315,11 @@ function makePostgameWidget(game) {
 
     // Footer
     row = document.createElement("tr");
-    cell = document.createElement("td");
-    cell.classList.add("xsdata", "status2");
-    cell.setAttribute("colspan", 4);
-    cell.innerHTML = sprintf('<div class="stat-block">{}</div><div class="stat-block">{}</div>',
-        getGamePitcher(game, "winning"), getGamePitcher(game, "losing"));
+    var cell = el("td", { className: "xsdata status2", colSpan: "4" });
+    cell.appendChild(el("div", { className: "stat-block", innerText: getGamePitcher(game, "winning") }));
+    cell.appendChild(el("div", { className: "stat-block", innerText: getGamePitcher(game, "losing") }));
     if (getSavePitcher(game) !== "") {
-        cell.innerHTML += sprintf('<div class="stat-block">{}</div>', getSavePitcher(game));
+        cell.appendChild(el("div", { className: "stat-block", innerText: getSavePitcher(game) }));
     }
     row.appendChild(cell);
     table.appendChild(row);
@@ -337,15 +329,13 @@ function makePostgameWidget(game) {
 
 function makeStandingsTeamCell(team) {
     var cell = document.createElement("td");
-    cell.innerHTML = sprintf('<img class="logo" src="modules/MMM-MLB/icons/{}.png"> {}', team.name, team.name);
+    cell.appendChild(getIcon(team.name, "logo"));
+    cell.appendChild(document.createTextNode(" " + team.name));
     return cell;
 }
 
 function makeStandingsStatCell(team, stat) {
-    var cell = document.createElement("td");
-    cell.classList.add("rhe-data");
-    cell.innerHTML = team[stat];
-    return cell;
+    return el("td", { className: "rhe-data", innerText: team[stat] });
 }
 
 function makeStandingsRow(team) {
@@ -364,16 +354,13 @@ function makeStandingsWidget(division) {
 
     // Header
     var row = document.createElement("tr");
-    var cell = document.createElement("th");
-    cell.classList.add("align-left", "status");
-    cell.innerHTML = division.name;
-    row.appendChild(cell);
+    row.appendChild(el("th", {
+        className: "align-left status",
+        innerText: division.name
+    }));
 
     ["W", "L", "GB", "L10", "STRK"].map(function(column) {
-        cell = document.createElement("th");
-        cell.classList.add("rhe-header");
-        cell.innerHTML = column;
-        row.appendChild(cell);
+        row.appendChild(el("th", { className: "rhe-header", innerText: column }));
     });
 
     table.appendChild(row);
@@ -416,7 +403,7 @@ Module.register("MMM-MLB", {
         Log.info("Starting module: " + self.name);
         // Set locale.
         self.week = "";
-        self.scoreboard = [];
+        self.scoreboard = { date: null, scores: [] };
         self.standings = [];
         self.activeItem = 0;
         self.rotateInterval = null;
@@ -431,35 +418,23 @@ Module.register("MMM-MLB", {
         wrapper.style.maxWidth = self.config.maxWidth;
 
         if (self.config.header === true) {
-            var html = (self.config.mode === "scoreboard") ? "MLB Scores " : "MLB Standings ";
-            html += moment().format('MM/DD/YYYY');
-            if (self.config.logo === true) {
-                html = "<img class='emblem' src='modules/MMM-MLB/icons/mlb.png'> " + html;
-            }
+            var text = sprintf("MLB {} {}", (self.config.mode === "scoreboard") ? "Scores" : "Standings", self.scoreboard.date || "");
 
-            var header = document.createElement("header");
-            header.classList.add("header");
-            header.innerHTML = html;
+            var header = el("header", { className: "header" });
+            if (self.config.logo === true) {
+                header.appendChild(getIcon("mlb", "emblem"));
+            }
+            header.appendChild(document.createTextNode(text));
+
             wrapper.appendChild(header);
         }
 
         if (self.config.mode === "scoreboard") {
-            if (self.config.header === true) {
-                var header = document.createElement("header");
-                header.classList.add("header");
-                if (self.config.logo === true) {
-                    header.innerHTML = "<img class='emblem' src='modules/MMM-MLB/icons/mlb.png'>    MLB Scores     " + moment().format('MM/DD/YYYY');
-                } else {
-                    header.innerHTML = " MLB Scores     " + moment().format('MM/DD/YYYY');
-                }
-                wrapper.appendChild(header);
-            }
-
-            if (self.scoreboard.length > 0) {
-                if (self.activeItem >= self.scoreboard.length) {
+            if (self.scoreboard.scores.length > 0) {
+                if (self.activeItem >= self.scoreboard.scores.length) {
                     self.activeItem = 0;
                 }
-                var game = self.scoreboard[self.activeItem];
+                var game = self.scoreboard.scores[self.activeItem];
 
                 var top = document.createElement("div");
                 top.classList = "small bright";
