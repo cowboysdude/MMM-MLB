@@ -501,7 +501,6 @@ Module.register("MMM-MLB", {
 
     socketNotificationReceived: function(notification, payload) {
         var self = this;
-        console.log(notification);
         if (notification === 'MLB_SCOREBOARD' && self.config.mode === "scoreboard") {
             self.scoreboard = payload;
             if (self.rotateInterval == null) {

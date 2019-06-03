@@ -55,49 +55,48 @@ module.exports = NodeHelper.create({
 
     getStandings: function(config) {
         var self = this;
+        var date = new Date();
         request({
-            url: "https://erikberg.com/mlb/standings.json",
+            url: "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=" + date.getUTCFullYear() + "&standingsTypes=regularSeason,springTraining,firstHalf,secondHalf&hydrate=division,conference,sport,league,team(nextSchedule(team,gameType=[R,F,D,L,W,C],inclusive=false),previousSchedule(team,gameType=[R,F,D,L,W,C],inclusive=true))",
             method: 'GET',
             headers: {
                 'User-Agent': 'MagicMirror/1.0 ('+config.email+')'
             }
         }, (error, response, body) => {
             if (!error && response.statusCode == 200) {
-                self.processStandings(config, JSON.parse(body).standing || []);
+                self.processStandings(config, body);
             }
         });
     },
 
-    processDivision: function(league, division, standings) {
-        var division_names = {
-            "E": " East",
-            "C": " Central",
-            "W": " West"
-        };
-        var mapped_names = {
-            "Diamondbacks": "D-backs",
-        };
+    processDivision: function(standings) {
         var result = {
-            name: league + division_names[division],
+            name: standings.division.nameShort,
             teams: []
         };
 
-        for (var i in standings) {
-            var team = standings[i];
+        for (var i in standings.teamRecords) {
+            var team = standings.teamRecords[i];
+            var lastTen = "-";
 
-            if (team.conference !== league || team.division !== division) {
-                continue;
+            for (var j in team.records.splitRecords) {
+                var split = team.records.splitRecords[j];
+
+                if (split.type === "lastTen") {
+                    lastTen = split.wins + "-" + split.losses;
+                    break;
+                }
             }
 
             result.teams.push({
-                "name": mapped_names[team.last_name] || team.last_name,
-                "rank": team.rank,
-                "W": team.won,
-                "L": team.lost,
-                "PCT": team.win_percentage,
-                "GB": (team.games_back > 0) ? team.games_back : "-",
-                "L10": team.last_ten,
-                "STRK": (team.streak_total > 0) ? (team.streak_type.toUpperCase()[0] + team.streak_total) : "-",
+                "name": team.team.teamName,
+                "rank": +team.divisionRank,
+                "W": team.leagueRecord.wins,
+                "L": team.leagueRecord.losses,
+                "PCT": team.leagueRecord.pct,
+                "GB": team.divisionGamesBack,
+                "L10": lastTen,
+                "STRK": team.streak.streakCode,
             });
         }
 
@@ -107,32 +106,20 @@ module.exports = NodeHelper.create({
     },
 
     processWildcard: function(league, standings) {
-        var mapped_names = {
-            "Diamondbacks": "D-backs",
-        };
         var result = {
             name: league + " Wildcard",
             teams: []
         };
 
-        for (var i in standings) {
-            var team = standings[i];
-
-            if (team.conference != league) {
-                continue;
+        standings.map((division) => {
+            if (!division.name.startsWith(league)) {
+                return;
             }
 
-            result.teams.push({
-                "name": mapped_names[team.last_name] || team.last_name,
-                "rank": team.rank,
-                "W": team.won,
-                "L": team.lost,
-                "PCT": team.win_percentage,
-                "GB": (team.games_back > 0) ? team.games_back : "-",
-                "L10": team.last_ten,
-                "STRK": (team.streak_total > 0) ? (team.streak_type.toUpperCase()[0] + team.streak_total) : "-",
-            });
-        }
+            for (var i in division.teams) {
+                result.teams.push(Object.assign({}, division.teams[i]));
+            }
+        });
 
         result.teams.sort(function(a, b) {
             if ((a.rank === 1) != (b.rank === 1)) {
@@ -174,19 +161,30 @@ module.exports = NodeHelper.create({
         return result;
     },
 
-    processStandings: function(config, standings) {
+    processStandings: function(config, body) {
         var self = this;
-        var result = [];
+        var standings = JSON.parse(body);
+        var result = {};
         // Include wildcard stats starting in September
         var include_wc = ((new Date()).getMonth() >= 8);
 
         ["AL", "NL"].map(function(league) {
-            ["E", "C", "W"].map(function(division) {
-                result.push(self.processDivision(league, division, standings));
+            ["East", "Central", "West"].map(function(division) {
+                standings.records.map((div) => {
+                    if (div.division.nameShort !== league + " " + division) {
+                        return;
+                    }
+
+                    if (!(div.standingsType in result)) {
+                        result[div.standingsType] = [];
+                    }
+
+                    result[div.standingsType].push(self.processDivision(div));
+                });
             });
 
-            if (include_wc) {
-                result.push(self.processWildcard(league, standings));
+            if (include_wc && "regularSeason" in result) {
+                result.regularSeason.push(self.processWildcard(league, result.regularSeason));
             }
         });
 
@@ -202,11 +200,7 @@ module.exports = NodeHelper.create({
             });
         }
 
-        self.sendSocketNotification('MLB_STANDINGS', result);
-    },
-
-    getDate: function() {
-        return (new Date()).toLocaleDateString();
+        self.sendSocketNotification('MLB_STANDINGS', result.regularSeason || result.springTraining);
     },
 
     socketNotificationReceived: function(notification, payload) {
