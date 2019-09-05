@@ -64,16 +64,18 @@ function getRunnersImg(game) {
     return getIcon(runners, "runners");
 }
 
-function makeTeamCell(game, team) {
+function makeTeamCell(game, team, includeName) {
     var cell = el("td", { className: team + "team" });
     var team_name = game[team + "_team_name"];
     cell.appendChild(getIcon(team_name, "logo"));
-    cell.appendChild(document.createTextNode(" " + team_name + " "));
-    if (game.hasOwnProperty(team + "_win") && game.hasOwnProperty(team + "_loss")) {
-        cell.appendChild(el("span", {
-            className: "xsdata",
-            innerText: sprintf("({}-{})", game[team + "_win"], game[team + "_loss"]),
-        }));
+    if (includeName) {
+        cell.appendChild(document.createTextNode(" " + team_name + " "));
+        if (game.hasOwnProperty(team + "_win") && game.hasOwnProperty(team + "_loss")) {
+            cell.appendChild(el("span", {
+                className: "xsdata",
+                innerText: sprintf("({}-{})", game[team + "_win"], game[team + "_loss"]),
+            }));
+        }
     }
     return cell;
 }
@@ -90,7 +92,7 @@ function makeStatCell(game, stat, team) {
 function makeStatRow(game, team) {
     var row = document.createElement("tr");
 
-    row.appendChild(makeTeamCell(game, team));
+    row.appendChild(makeTeamCell(game, team, true));
     row.appendChild(makeStatCell(game, "r", team));
     row.appendChild(makeStatCell(game, "h", team));
     row.appendChild(makeStatCell(game, "e", team));
@@ -140,7 +142,7 @@ function makeNoGameWidget(game) {
 
     // Body
     row = document.createElement("tr");
-    row.appendChild(makeTeamCell(game, "home"));
+    row.appendChild(makeTeamCell(game, "home", true));
     table.appendChild(row);
 
     return table;
@@ -164,12 +166,12 @@ function makePregameWidget(game) {
 
     // Body
     row = document.createElement("tr");
-    row.appendChild(makeTeamCell(game, "away"));
+    row.appendChild(makeTeamCell(game, "away", true));
     row.appendChild(el("td", { className: "pregame-data", rowSpan: "2", innerText: getGameTime(game) }));
     table.appendChild(row);
 
     row = document.createElement("tr");
-    row.appendChild(makeTeamCell(game, "home"));
+    row.appendChild(makeTeamCell(game, "home", true));
     table.appendChild(row);
 
     // Footer
@@ -206,34 +208,46 @@ function makePostponedWidget(game) {
 
     // Body
     row = document.createElement("tr");
-    row.appendChild(makeTeamCell(game, "away"));
+    row.appendChild(makeTeamCell(game, "away", true));
     row.appendChild(el("td", { className: "postponed-data", rowSpan: "2", innerText: getPostponedReason(game) }));
     table.appendChild(row);
 
     row = document.createElement("tr");
-    row.appendChild(makeTeamCell(game, "home"));
+    row.appendChild(makeTeamCell(game, "home", true));
     table.appendChild(row);
 
     return table;
 }
 
-function getGameInning(game) {
+function getInning(game) {
     var state = game.status.inning_state.substring(0, 3);
-    var inning = game.status.inning - ((state === "End") ? 1 : 0);
-    return sprintf("{} {}", state, getOrdinal(inning));
+    return game.status.inning - ((state === "End") ? 1 : 0);
+}
+
+function getInningText(game) {
+    var state = game.status.inning_state.substring(0, 3);
+    return sprintf("{} {}", state, getOrdinal(getInning(game)));
 }
 
 function getInProgressStatus(game) {
     if (game.status.status === "In Progress") {
-        return getGameInning(game);
+        return getInningText(game);
     } else if (game.status.status === "Delayed") {
-        return sprintf("{} (Delayed)", getGameInning(game));
+        return sprintf("{} (Delayed)", getInningText(game));
     } else if (game.status.status === "Manager Challenge") {
-        return sprintf("{} (Challenge)", getGameInning(game));
+        return sprintf("{} (Challenge)", getInningText(game));
     } else if (game.status.status === "Review") {
-        return sprintf("{} (Review)", getGameInning(game));
+        return sprintf("{} (Review)", getInningText(game));
     } else {
         return game.status.status;
+    }
+}
+
+function getTeamScore(game, inning, team) {
+    if (inning in game.linescore.inning) {
+        return game.linescore.inning[inning][team];
+    } else {
+        return "";
     }
 }
 
@@ -242,7 +256,15 @@ function makeInProgressWidget(game) {
 
     // Header
     var row = document.createElement("tr");
-    row.appendChild(el("th", { className: "align-left status", colSpan: "2", innerText: getInProgressStatus(game) }));
+    row.appendChild(el("th", { className: "align-left status", innerText: getInProgressStatus(game) }));
+
+    var baseInning = Math.max(getInning(game) - 9, 0), inning;
+    for (inning = baseInning; inning < baseInning + 9; ++inning) {
+        row.appendChild(el("th", { className: "rhe-data", innerText: inning + 1 }));
+    }
+    row.appendChild(el("th", { className: "rhe-data", innerText: "R" }));
+    row.appendChild(el("th", { className: "rhe-data", innerText: "H" }));
+    row.appendChild(el("th", { className: "rhe-data", innerText: "E" }));
 
     var cell = el("td", { className: "xsdata inprogress-data", rowSpan: "3" });
     cell.appendChild(el("div").appendChild(getRunnersImg(game)).parentElement);
@@ -251,19 +273,21 @@ function makeInProgressWidget(game) {
     table.appendChild(row);
 
     // Body
-    row = document.createElement("tr");
-    row.appendChild(makeTeamCell(game, "away"));
-    row.appendChild(makeStatCell(game, "r", "away"));
-    table.appendChild(row);
-
-    row = document.createElement("tr");
-    row.appendChild(makeTeamCell(game, "home"));
-    row.appendChild(makeStatCell(game, "r", "home"));
-    table.appendChild(row);
+    ["away", "home"].map(team => {
+        row = document.createElement("tr");
+        row.appendChild(makeTeamCell(game, team, false));
+        for (inning = baseInning; inning < baseInning + 9; ++inning) {
+            row.appendChild(el("th", { className: "rhe-data", innerText: getTeamScore(game, inning, team) }));
+        }
+        row.appendChild(makeStatCell(game, "r", team));
+        row.appendChild(makeStatCell(game, "h", team));
+        row.appendChild(makeStatCell(game, "e", team));
+        table.appendChild(row);
+    });
 
     // Footer
     row = document.createElement("tr");
-    cell = el("td", { className: "xsdata status3", colSpan: "3" });
+    cell = el("td", { className: "xsdata status3", colSpan: "14" });
     if (game.status.status === "Manager Challenge") {
         cell.innerText = sprintf("{} challenge - {}", game.status.challenge_team_brief, game.status.reason);
     } else if (game.status.status === "Review") {
