@@ -66,3 +66,6 @@
 }
 .MMM-MLB .status4 {
 }
+.MMM-MLB .losing-team {
+  filter: brightness(0.6);
+}

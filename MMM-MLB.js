@@ -89,8 +89,8 @@ function makeStatCell(game, stat, team) {
     return el("td", { className: "rhe-data", innerText: text });
 }
 
-function makeStatRow(game, team) {
-    var row = document.createElement("tr");
+function makeStatRow(game, team, rowClass) {
+    var row = el("tr", { className: rowClass });
 
     row.appendChild(makeTeamCell(game, team, true));
     row.appendChild(makeStatCell(game, "r", team));
@@ -334,8 +334,9 @@ function makePostgameWidget(game) {
     table.appendChild(row);
 
     // Body
-    table.appendChild(makeStatRow(game, "away"));
-    table.appendChild(makeStatRow(game, "home"));
+    var homeTeamLost = (+game.linescore.r.home < +game.linescore.r.away);
+    table.appendChild(makeStatRow(game, "away", homeTeamLost ? "winning-team" : "losing-team"));
+    table.appendChild(makeStatRow(game, "home", homeTeamLost ? "losing-team" : "winning-team"));
 
     // Footer
     row = document.createElement("tr");
