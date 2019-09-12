@@ -219,14 +219,16 @@ function makePostponedWidget(game) {
     return table;
 }
 
+function getInningState(game) {
+    return game.status.inning_state.substring(0, 3);
+}
+
 function getInning(game) {
-    var state = game.status.inning_state.substring(0, 3);
-    return game.status.inning - ((state === "End") ? 1 : 0);
+    return game.status.inning - ((getInningState(game) === "End") ? 1 : 0);
 }
 
 function getInningText(game) {
-    var state = game.status.inning_state.substring(0, 3);
-    return sprintf("{} {}", state, getOrdinal(getInning(game)));
+    return sprintf("{} {}", getInningState(game), getOrdinal(getInning(game)));
 }
 
 function getInProgressStatus(game) {
@@ -294,6 +296,14 @@ function makeInProgressWidget(game) {
         cell.innerText = sprintf("{} challenge - {}", game.status.challenge_team_brief, game.status.reason);
     } else if (game.status.status === "Review") {
         cell.innerText = sprintf("Umpire review - {}", game.status.reason);
+    } else if (["Warmup", "Mid", "End"].includes(getInningState(game))) {
+        cell.appendChild(el("div", { className: "stat-block", innerText: "Due Up:" }));
+        ["batter", "ondeck", "inhole"].map(batter => {
+            cell.appendChild(el("div", {
+                className: "stat-block",
+                innerText: sprintf("{} ({}-{})", game[batter].name_display_roster, game[batter].h, game[batter].ab),
+            }));
+        });
     } else {
         cell.appendChild(el("div", {
             className: "stat-block",
