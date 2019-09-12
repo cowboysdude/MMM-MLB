@@ -246,6 +246,8 @@ function getInProgressStatus(game) {
 function getTeamScore(game, inning, team) {
     if (inning in game.linescore.inning) {
         return game.linescore.inning[inning][team];
+    } else if (inning === 0 && team in game.linescore.inning) {
+        return game.linescore.inning[team];
     } else {
         return "";
     }
