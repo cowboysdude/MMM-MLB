@@ -41,8 +41,12 @@ module.exports = NodeHelper.create({
         var focus = config.focus_on;
         var result = {
             date: z(date.getUTCMonth() + 1) + "/" + z(date.getUTCDate()) + "/" + date.getUTCFullYear(),
-            scores: JSON.parse(body).data.games.game || [],
+            scores: JSON.parse(body).data.games.game,
         };
+
+        if (!Array.isArray(result.scores)) {
+            result.scores = [result.scores];
+        }
 
         if (focus.length > 0) {
             result.scores = result.scores.filter((game) => {
