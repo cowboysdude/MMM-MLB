@@ -346,9 +346,10 @@ function makePostgameWidget(game) {
     table.appendChild(row);
 
     // Body
-    var homeTeamLost = (+game.linescore.r.home < +game.linescore.r.away);
-    table.appendChild(makeStatRow(game, "away", homeTeamLost ? "winning-team" : "losing-team"));
-    table.appendChild(makeStatRow(game, "home", homeTeamLost ? "losing-team" : "winning-team"));
+    var awayWin = (+game.linescore.r.away > +game.linescore.r.home);
+    var homeWin = (+game.linescore.r.home > +game.linescore.r.away);
+    table.appendChild(makeStatRow(game, "away", awayWin ? "winning-team" : homeWin ? "losing-team" : "tied-team"));
+    table.appendChild(makeStatRow(game, "home", homeWin ? "winning-team" : awayWin ? "losing-team" : "tied-team"));
 
     // Footer
     row = document.createElement("tr");
