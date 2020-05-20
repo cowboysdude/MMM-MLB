@@ -18,18 +18,6 @@ function el(tag, options) {
     return result;
 }
 
-function sprintf(fmt) {
-    var parts = fmt.split("{}");
-    var message = parts[0];
-    var i;
-
-    for (i = 1; i < parts.length; ++i) {
-        message += arguments[i] + parts[i];
-    }
-
-    return message;
-}
-
 function getOrdinal(i) {
     var j = i % 10;
     var k = i % 100;
@@ -48,7 +36,7 @@ function getOrdinal(i) {
 function getIcon(name, className) {
     return el("img", {
         className: className,
-        src: sprintf("modules/MMM-MLB/icons/{}.png", name),
+        src: `modules/MMM-MLB/icons/${name}.png`,
     });
 }
 
@@ -73,7 +61,7 @@ function makeTeamCell(game, team, includeName) {
         if (game.hasOwnProperty(team + "_win") && game.hasOwnProperty(team + "_loss")) {
             cell.appendChild(el("span", {
                 className: "xsdata",
-                innerText: sprintf("({}-{})", game[team + "_win"], game[team + "_loss"]),
+                innerText: `(${game[team + "_win"]}-${game[team + "_loss"]})`,
             }));
         }
     }
@@ -105,10 +93,10 @@ function getProbablePitcher(game, team) {
     if (game.hasOwnProperty(team + "_probable_pitcher")) {
         var data = game[team + "_probable_pitcher"];
         if (data.name_display_roster !== "") {
-            name = sprintf("{} ({}-{}, {})", data.name_display_roster, data.wins, data.losses, data.era);
+            name = `${data.name_display_roster} (${data.wins}-${data.losses}, ${data.era})`;
         }
     }
-    return sprintf("{}: {}", game[team + "_name_abbrev"], name);
+    return `${game[team + "_name_abbrev"]}: ${name}`;
 }
 
 function getGamePitcher(game, type) {
@@ -116,17 +104,17 @@ function getGamePitcher(game, type) {
     if (game.hasOwnProperty(type + "_pitcher")) {
         var data = game[type + "_pitcher"];
         if (data.name_display_roster !== "") {
-            name = sprintf("{} ({}-{}, {})", data.name_display_roster, data.wins, data.losses, data.era);
+            name = `${data.name_display_roster} (${data.wins}-${data.losses}, ${data.era})`;
         }
     }
-    return sprintf("{}: {}", type[0].toUpperCase(), name);
+    return `${type[0].toUpperCase()}: ${name}`;
 }
 
 function getSavePitcher(game) {
     if (game.hasOwnProperty("save_pitcher")) {
         var data = game.save_pitcher;
         if (data.name_display_roster !== "") {
-            return sprintf("S: {} ({})", data.name_display_roster, data.saves);
+            return `S: ${data.name_display_roster} (${data.saves})`;
         }
     }
     return "";
@@ -150,7 +138,7 @@ function makeNoGameWidget(game) {
 
 function getGameTime(game) {
     if (game.time.includes(":")) {
-        return sprintf("{} {} {}", game.time, game.hm_lg_ampm, game.time_zone);
+        return `${game.time} ${game.hm_lg_ampm} ${game.time_zone}`;
     } else {
         return game.time;
     }
@@ -228,18 +216,18 @@ function getInning(game) {
 }
 
 function getInningText(game) {
-    return sprintf("{} {}", getInningState(game), getOrdinal(getInning(game)));
+    return `${getInningState(game)} ${getOrdinal(getInning(game))}`;
 }
 
 function getInProgressStatus(game) {
     if (game.status.status === "In Progress") {
         return getInningText(game);
     } else if (game.status.status === "Delayed") {
-        return sprintf("{} (Delayed)", getInningText(game));
+        return `${getInningText(game)} (Delayed)`;
     } else if (game.status.status === "Manager Challenge") {
-        return sprintf("{} (Challenge)", getInningText(game));
+        return `${getInningText(game)} (Challenge)`;
     } else if (game.status.status === "Review") {
-        return sprintf("{} (Review)", getInningText(game));
+        return `${getInningText(game)} (Review)`;
     } else {
         return game.status.status;
     }
@@ -272,7 +260,7 @@ function makeInProgressWidget(game) {
 
     var cell = el("td", { className: "xsdata inprogress-data", rowSpan: "3" });
     cell.appendChild(el("div").appendChild(getRunnersImg(game)).parentElement);
-    cell.appendChild(el("div", { innerText: sprintf("{}-{}, {} out", game.status.b, game.status.s, game.status.o) }));
+    cell.appendChild(el("div", { innerText: `${game.status.b}-${game.status.s}, ${game.status.o} out` }));
     row.appendChild(cell);
     table.appendChild(row);
 
@@ -293,25 +281,25 @@ function makeInProgressWidget(game) {
     row = document.createElement("tr");
     cell = el("td", { className: "xsdata status3", colSpan: "14" });
     if (game.status.status === "Manager Challenge") {
-        cell.innerText = sprintf("{} challenge - {}", game.status.challenge_team_brief, game.status.reason);
+        cell.innerText = `${game.status.challenge_team_brief} challenge - ${game.status.reason}`;
     } else if (game.status.status === "Review") {
-        cell.innerText = sprintf("Umpire review - {}", game.status.reason);
+        cell.innerText = `Umpire review - ${game.status.reason}`;
     } else if (["Warmup", "Mid", "End"].includes(getInningState(game))) {
         cell.appendChild(el("div", { className: "stat-block", innerText: "Due Up:" }));
         ["batter", "ondeck", "inhole"].map(batter => {
             cell.appendChild(el("div", {
                 className: "stat-block",
-                innerText: sprintf("{} ({}-{})", game[batter].name_display_roster, game[batter].h, game[batter].ab),
+                innerText: `${game[batter].name_display_roster} (${game[batter].h}-${game[batter].ab})`,
             }));
         });
     } else {
         cell.appendChild(el("div", {
             className: "stat-block",
-            innerText: sprintf("P: {} ({}-{}, {})", game.pitcher.name_display_roster, game.pitcher.wins, game.pitcher.losses, game.pitcher.era),
+            innerText: `P: ${game.pitcher.name_display_roster} (${game.pitcher.wins}-${game.pitcher.losses}, ${game.pitcher.era})`,
         }));
         cell.appendChild(el("div", {
             className: "stat-block",
-            innerText: sprintf("AB: {} ({}-{}, {})", game.batter.name_display_roster, game.batter.h, game.batter.ab, game.batter.avg),
+            innerText: `AB: ${game.batter.name_display_roster} (${game.batter.h}-${game.batter.ab}, ${game.batter.avg})`,
         }));
     }
     row.appendChild(cell);
@@ -328,7 +316,7 @@ function getPostgameStatus(game) {
     }
 
     if (game.game_nbr > 1) {
-        text += sprintf(" - Game {}", game.game_nbr);
+        text += ` - Game ${game.game_nbr}`;
     }
 
     return text;
@@ -456,7 +444,7 @@ Module.register("MMM-MLB", {
         wrapper.style.maxWidth = self.config.maxWidth;
 
         if (self.config.header === true) {
-            var text = sprintf("MLB {} {}", (self.config.mode === "scoreboard") ? "Scores" : "Standings", self.scoreboard.date || "");
+            var text = `MLB ${(self.config.mode === "scoreboard") ? "Scores" : "Standings"} ${self.scoreboard.date || ""}`;
 
             var header = el("header", { className: "header" });
             if (self.config.logo === true) {
