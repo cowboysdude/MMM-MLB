@@ -52,10 +52,19 @@ function getRunnersImg(game) {
     return getIcon(runners, "runners");
 }
 
+function getOpposingTeam(team) {
+  return (team === "home") ? "away" : "home";
+}
+
 function makeTeamCell(game, team, includeName) {
     var cell = el("td", { className: team + "team" });
     var team_name = game[team + "_team_name"];
-    cell.appendChild(getIcon(team_name, "logo"));
+    if (team_name === "Intrasquad") {
+      var opponent = game[getOpposingTeam(team) + "_team_name"];
+      cell.appendChild(getIcon(opponent, "logo"));
+    } else {
+      cell.appendChild(getIcon(team_name, "logo"));
+    }
     if (includeName) {
         cell.appendChild(document.createTextNode(" " + team_name + " "));
         if (game.hasOwnProperty(team + "_win") && game.hasOwnProperty(team + "_loss")) {
