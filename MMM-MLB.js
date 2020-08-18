@@ -320,7 +320,7 @@ function makeInProgressWidget(game) {
 function getPostgameStatus(game) {
     var text = game.status.status;
 
-    if (game.status.inning !== "9") {
+    if (game.status.inning !== game.scheduled_innings) {
         text += "/" + game.status.inning;
     }
 
