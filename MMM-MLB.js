@@ -259,9 +259,13 @@ function makeInProgressWidget(game) {
     var row = document.createElement("tr");
     row.appendChild(el("th", { className: "align-left status", innerText: getInProgressStatus(game) }));
 
-    var baseInning = Math.max(getInning(game) - 9, 0), inning;
+    var currentInning = getInning(game);
+    var baseInning = Math.max(currentInning - 9, 0);
+    var lastScheduledInning = Math.max(game.scheduled_innings, currentInning);
+    var inning;
     for (inning = baseInning; inning < baseInning + 9; ++inning) {
-        row.appendChild(el("th", { className: "rhe-data", innerText: inning + 1 }));
+        var unscheduledInning = (inning >= lastScheduledInning) ? " unscheduled-inning" : "";
+        row.appendChild(el("th", { className: `rhe-data${unscheduledInning}`, innerText: inning + 1 }));
     }
     row.appendChild(el("th", { className: "rhe-data", innerText: "R" }));
     row.appendChild(el("th", { className: "rhe-data", innerText: "H" }));

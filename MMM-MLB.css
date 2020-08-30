@@ -69,3 +69,6 @@
 .MMM-MLB .losing-team {
   filter: brightness(0.6);
 }
+.MMM-MLB .unscheduled-inning {
+  filter: brightness(0.4);
+}
