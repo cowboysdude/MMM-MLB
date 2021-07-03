@@ -5,7 +5,7 @@
     *
     */
 const NodeHelper = require('node_helper');
-const request = require('request');
+const https = require("https");
 const moment = require('moment');
 const fs = require('fs');
 
@@ -14,6 +14,23 @@ module.exports = NodeHelper.create({
     start: function() {
         var self = this;
         console.log("Starting module: " + self.name);
+    },
+
+    request: function(options, callback) {
+        var error = undefined;
+        var response = undefined;
+        var body = "";
+
+        const req = https.request(options.url, options, res => {
+            response = res;
+            res.on("data", chunk => body += chunk);
+            res.on("error", e => error = e);
+        });
+
+        req.on("error", e => error = e);
+        req.on("close", () => callback(error, response, body));
+
+        req.end(options.body);
     },
 
     getScoreboard: function(config) {
@@ -25,8 +42,8 @@ module.exports = NodeHelper.create({
         }
         var url_date = "year_" + date.getUTCFullYear() + "/month_" + z(date.getUTCMonth() + 1) + "/day_" + z(date.getUTCDate());
 
-        request({
-            url: "http://gd2.mlb.com/components/game/mlb/" + url_date + "/master_scoreboard.json",
+        self.request({
+            url: `https://gd2.mlb.com/components/game/mlb/${url_date}/master_scoreboard.json`,
             method: 'GET'
         }, (error, response, body) => {
             if (!error && response.statusCode == 200) {
@@ -60,7 +77,7 @@ module.exports = NodeHelper.create({
     getStandings: function(config) {
         var self = this;
         var date = new Date();
-        request({
+        self.request({
             url: "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=" + date.getUTCFullYear() + "&standingsTypes=regularSeason,springTraining,firstHalf,secondHalf&hydrate=division,conference,sport,league,team(nextSchedule(team,gameType=[R,F,D,L,W,C],inclusive=false),previousSchedule(team,gameType=[R,F,D,L,W,C],inclusive=true))",
             method: 'GET',
             headers: {
