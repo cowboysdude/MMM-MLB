@@ -308,7 +308,7 @@ function makeInProgressWidget(game) {
     } else {
         cell.appendChild(el("div", {
             className: "stat-block",
-            innerText: `P: ${game.pitcher.name_display_roster} (${game.pitcher.wins}-${game.pitcher.losses}, ${game.pitcher.era})`,
+            innerText: `P: ${game.pitcher.name_display_roster} (${game.pitcher.ip} IP, ${game.pitcher.era})`,
         }));
         cell.appendChild(el("div", {
             className: "stat-block",
