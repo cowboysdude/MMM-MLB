@@ -469,7 +469,7 @@ Module.register("MMM-MLB", {
         }
 
         if (self.config.mode === "scoreboard") {
-            if (self.scoreboard.scores.length > 0) {
+            if (self.scoreboard.scores.length > 0 && self.scoreboard.scores[0] !== null) {
                 if (self.activeItem >= self.scoreboard.scores.length) {
                     self.activeItem = 0;
                 }
@@ -491,7 +491,7 @@ Module.register("MMM-MLB", {
                 wrapper.appendChild(top);
             }
         } else {
-            if (self.standings.length > 0) {
+            if (self.standings.length > 0 && self.standings[0] !== null) {
                 if (self.activeItem >= self.standings.length) {
                     self.activeItem = 0;
                 }
